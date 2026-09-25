@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <!-- Map picture: the biggest thing on screen, so fetch it first. Keep this address identical to the map <image> href below. -->
-<link rel="preload" as="image" href="/.netlify/images?url=/map.webp" fetchpriority="high">
+<link rel="preload" as="image" href="map.webp" fetchpriority="high">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ParkRadar">
@@ -375,7 +375,7 @@ button.row:hover{background:var(--surface-2)}
   <main id="main">
     <div id="mapWrap">
       <svg id="map" preserveAspectRatio="xMidYMid meet" aria-label="Campus parking map">
-        <g id="baseL"><rect class="m-land" x="-4000" y="-4000" width="10102" height="9586"/><image class="mapimg" href="/.netlify/images?url=/map.webp" onerror="this.onerror=null;this.setAttribute('href','map.webp')" x="0" y="0" width="2102" height="1586" preserveAspectRatio="none"/></g><g id="lotsL"></g><g id="selL"></g><g id="routeL"></g><g id="labelsL"></g><g id="pinsL"></g>
+        <g id="baseL"><rect class="m-land" x="-4000" y="-4000" width="10102" height="9586"/><image class="mapimg" href="map.webp" x="0" y="0" width="2102" height="1586" preserveAspectRatio="none"/></g><g id="lotsL"></g><g id="selL"></g><g id="routeL"></g><g id="labelsL"></g><g id="pinsL"></g>
       </svg>
       <div id="mapUI"></div>
     </div>
