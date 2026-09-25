@@ -1,0 +1,14 @@
+# Netlify settings for ParkRadar.
+
+# Let browsers keep the map picture for a whole year (31,536,000 seconds), so
+# returning visitors don't download it again. Netlify also applies this rule to
+# the copies its Image CDN serves at /.netlify/images?url=/map.webp.
+#
+# IMPORTANT: browsers won't check for a newer map for a year. If you ever change
+# the map, save it under a NEW file name (for example map-2.webp), then update
+# the two places in index.html that say /map.webp AND the "for" line below.
+# Otherwise returning visitors will keep seeing the old map.
+[[headers]]
+  for = "/map.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
