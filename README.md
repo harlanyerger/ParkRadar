@@ -4,7 +4,7 @@ Know before you park. A campus parking app with enforcement reports, lot availab
 
 ## Files
 
-- `index.html` is the whole app, with the campus map image built in.
+- `index.html` is the whole app, with the campus map image built in. It also shows Mapbox street and satellite maps; the layers button under the zoom buttons switches between Streets, Satellite and the Ole Miss parking map.
 - `manifest.webmanifest` and the icons let people add it to their home screen.
 
 ## Running it
