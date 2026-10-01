@@ -13,6 +13,6 @@ It's hosted with GitHub Pages at https://harlanyerger.github.io/ParkRadar/. To u
 
 On an iPhone, open the link in Safari, tap Share, then Add to Home Screen. ParkRadar then opens full screen, like an app.
 
-## Note
+## Shared reports
 
-On this site each phone keeps its own reports. Shared, live reports between users need a backend such as Firebase.
+Reports and lot updates are shared live between everyone using the site and the ParkRadar iPhone app, through Firebase (anonymous sign-in plus Cloud Firestore). The security rules are in `firestore.rules` in the project folder. Each person's permit, vehicle and saved car stay private to them. If Firebase can't be reached, the site falls back to keeping reports on that device.

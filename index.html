@@ -442,6 +442,16 @@ const ENF_TTL = 15 * MIN;
 const AVAIL_TTL = 60 * MIN;
 const MAP_W = 2102, MAP_H = 1586;    // base map image size; map units are image pixels
 const U_PER_MI = 1341;               // about 1.2 m per pixel, checked against the stadium, Swayze Field and the Circle
+/* Live, shared reports. These identify the Firebase project; they are public identifiers, not passwords.
+   Access is controlled by firestore.rules. Clear apiKey to keep reports on each device only. */
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyC774BGIouXnCoI4uTaRh3GliOyCuSrDBU',
+  authDomain: 'park-radar-db7d4.firebaseapp.com',
+  projectId: 'park-radar-db7d4',
+  storageBucket: 'park-radar-db7d4.firebasestorage.app',
+  messagingSenderId: '801030490437',
+  appId: '1:801030490437:web:fa019994e67cde87f4162c',
+};
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGFybGFueWVyZ2VyIiwiYSI6ImNtdWdjcjIxZTBjcTEyd29oZDdtaG83MGkifQ.N3cvA49hAYNtcoojqgvzww';
 const MAPBOX_JS = 'https://api.mapbox.com/mapbox-gl-js/v3.32.0/mapbox-gl';
 /* Map-image pixels <-> real coordinates. The Ole Miss map image is a north-up Web Mercator rendering; this
@@ -770,15 +780,18 @@ function inMyZones(x, y) {
   return l ? permitStatus(l) !== 'no' : false;
 }
 
-/* ---------------- data layer ---------------- */
+/* ---------------- data layer: Firebase Anonymous Auth + Cloud Firestore ----------------
+   Collections: reports/{id} (shared reports), lots/{lotId} (latest availability per lot),
+   users/{uid} (each person's private settings and saved car). See firestore.rules. */
+const FB_VERSION = '12.17.1';
+const fbUrl = name => `https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-${name}.js`;
 function persistLocal() { if (!S.db) { lsSet('pr.reports', S.reports.slice(0, 150)); lsSet('pr.lots', S.lots); } }
 function handleWriteErr(e) {
   const c = e && e.code;
-  if (c === 'invalid_argument' || c === 'not_granted') {
-    S.readOnly = true; toast('Your access is view-only, so posting is turned off.'); render();
-  } else if (c === 'quota_exceeded') toast('Report storage is full. Old reports need clearing before new ones can post.');
-  else if (c === 'resource_exhausted') toast('Too many updates at once. Wait a moment and try again.');
-  else if (c === 'revoked') toast('Access to live reports ended. Reload to reconnect.');
+  console.warn('ParkRadar: write failed', c, e && e.message);
+  if (c === 'permission-denied') toast("That couldn't be saved. If your phone's clock is off, fix it and try again.");
+  else if (c === 'resource-exhausted') toast('Too many updates right now. Wait a moment and try again.');
+  else if (c === 'unauthenticated') toast('Your session ended. Reload the page to reconnect.');
   else toast("Couldn't save that. Check your connection and try again.");
 }
 async function withRetry(fn) {
@@ -791,22 +804,28 @@ async function withRetry(fn) {
 async function addReport(r) {
   r = { ...r, v:MAP_V };
   if (S.db) {
-    try { await withRetry(() => S.db.collection('reports').add(r)); pruneOld(); return true; }
+    const { f, db } = S.db;
+    try { await withRetry(() => f.addDoc(f.collection(db, 'reports'), r)); pruneOld(); return true; }
     catch (e) { handleWriteErr(e); return false; }
   }
   S.reports.unshift({ id:'l' + Date.now().toString(36), ...r }); persistLocal(); refreshLive(); return true;
 }
-async function patchReport(id, patch) {
+// Adds or refreshes only this person's own entry in a report's "confirms" or "gone" map.
+// Writing just that one nested field (not the whole map) is what the security rules allow.
+async function stampReport(id, field) {
+  const key = myKey(), t = Date.now();
   if (S.db) {
-    try { await withRetry(() => S.db.doc('reports/' + id).update(patch)); return true; }
+    const { f, db } = S.db;
+    try { await withRetry(() => f.updateDoc(f.doc(db, 'reports', id), { [`${field}.${key}`]: t })); return true; }
     catch (e) { handleWriteErr(e); return false; }
   }
-  const r = S.reports.find(x => x.id === id); if (r) Object.assign(r, patch);
+  const r = S.reports.find(x => x.id === id); if (r) r[field] = { ...(r[field] || {}), [key]: t };
   persistLocal(); refreshLive(); return true;
 }
 async function deleteReport(id) {
   if (S.db) {
-    try { await withRetry(() => S.db.doc('reports/' + id).delete()); return true; }
+    const { f, db } = S.db;
+    try { await withRetry(() => f.deleteDoc(f.doc(db, 'reports', id))); return true; }
     catch (e) { handleWriteErr(e); return false; }
   }
   S.reports = S.reports.filter(x => x.id !== id); persistLocal(); refreshLive(); return true;
@@ -814,16 +833,20 @@ async function deleteReport(id) {
 async function setLotLevel(id, level) {
   const data = { level, at:Date.now(), by:myKey() };
   if (S.db) {
-    try { await withRetry(() => S.db.doc('lots/' + id).set(data)); return true; }
+    const { f, db } = S.db;
+    try { await withRetry(() => f.setDoc(f.doc(db, 'lots', id), data)); return true; }
     catch (e) { handleWriteErr(e); return false; }
   }
   S.lots[id] = data; persistLocal(); refreshLive(); return true;
 }
 let pruning = false;
+// Clears out this person's own stale reports. The rules only let authors delete their reports;
+// everyone else's old reports are simply hidden once they expire.
 async function pruneOld() {
   if (pruning || !S.db) return; pruning = true;
-  const old = S.reports.filter(r => S.now - lastSeen(r) > 12*60*MIN && !(r.kind === 'closure' && r.until > S.now)).slice(0, 12);
-  for (const r of old) { try { await S.db.doc('reports/' + r.id).delete(); } catch { break; } }
+  const { f, db } = S.db, me = myKey();
+  const old = S.reports.filter(r => r.by === me && S.now - lastSeen(r) > 12*60*MIN && !(r.kind === 'closure' && r.until > S.now)).slice(0, 12);
+  for (const r of old) { try { await f.deleteDoc(f.doc(db, 'reports', r.id)); } catch { break; } }
   pruning = false;
 }
 let pSaving = false, pDirty = false;
@@ -832,44 +855,59 @@ async function saveProfile() {
   if (!(S.db && S.me.id)) return;
   if (pSaving) { pDirty = true; return; }
   pSaving = true;
+  const { f, db } = S.db;
   do {
     pDirty = false;
-    try { await S.db.doc(`data/users/${S.me.id}/profile`).set(JSON.parse(JSON.stringify(S.profile))); }
-    catch { break; }
+    try { await f.setDoc(f.doc(db, 'users', S.me.id), JSON.parse(JSON.stringify(S.profile))); }
+    catch (e) { console.warn('ParkRadar: could not save settings', e); break; }
   } while (pDirty);
   pSaving = false;
 }
 
 async function initRuntime() {
-  const cl = window.claude;
-  if (!cl || typeof cl.use !== 'function') { S.mode = 'local'; syncHeader(); return; }
-  let user = null, db = null;
-  try { user = await cl.use('user'); } catch {}
-  if (user) {
-    try { const me = await user.me(); S.me = { id:me.id, name:me.name || '', avatar:me.avatarUrl || null }; } catch {}
-    try { const c = await user.can('data.write'); if (c === false) S.readOnly = true; } catch {}
+  const cfg = FIREBASE_CONFIG;
+  if (!cfg || !cfg.apiKey || !cfg.projectId || String(cfg.apiKey).includes('PASTE')) {
+    S.mode = 'local'; syncHeader(); render(); return;
   }
-  try { db = await cl.use('db'); } catch {}
-  if (!db) { S.mode = 'local'; syncHeader(); render(); return; }
-  S.db = db; S.mode = 'live'; S.reports = []; S.lots = {};
+  let f, db;
+  try {
+    const [appMod, authMod, fsMod] = await Promise.all([import(fbUrl('app')), import(fbUrl('auth')), import(fbUrl('firestore'))]);
+    const app = appMod.initializeApp(cfg);
+    const auth = authMod.getAuth(app);
+    await auth.authStateReady();                      // reuse this device's anonymous account if it has one
+    const user = auth.currentUser || (await authMod.signInAnonymously(auth)).user;
+    S.me = { id:user.uid, name:'', avatar:null };
+    f = fsMod; db = fsMod.getFirestore(app);
+  } catch (e) {
+    console.error('ParkRadar: could not connect to Firebase', e);
+    S.mode = 'local'; syncHeader(); render();
+    toast(e && (e.code === 'auth/operation-not-allowed' || e.code === 'auth/admin-restricted-operation')
+      ? 'Live reports are off: turn on Anonymous sign-in in Firebase Authentication.'
+      : "Couldn't reach live reports. Saving on this device for now.");
+    return;
+  }
+  S.db = { f, db }; S.mode = 'live'; S.reports = []; S.lots = {};
   syncHeader();
-  db.collection('reports').orderBy('at', 'desc').limit(200).onSnapshot(snap => {
+  const onErr = what => err => {
+    console.error(`ParkRadar: ${what} listener failed`, err);
+    if (err && err.code === 'permission-denied') toast('Live reports were blocked. Check the Firestore security rules.');
+    else toast("Lost the connection to live reports. Reload to reconnect.");
+  };
+  f.onSnapshot(f.query(f.collection(db, 'reports'), f.orderBy('at', 'desc'), f.limit(200)), snap => {
     for (const ch of snap.docChanges()) if (ch.type === 'added') maybeAlert({ id:ch.doc.id, ...ch.doc.data() });
     S.reports = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     refreshLive();
-  }, err => { if (err && err.code === 'revoked') { S.mode = 'local'; syncHeader(); } });
-  db.collection('lots').onSnapshot(snap => {
+  }, onErr('reports'));
+  f.onSnapshot(f.collection(db, 'lots'), snap => {
     const next = {};
     for (const d of snap.docs) next[d.id] = d.data();
     S.lots = next; refreshLive();
-  }, () => {});
-  if (S.me.id) {
-    try {
-      const snap = await db.doc(`data/users/${S.me.id}/profile`).get();
-      if (snap.exists) { S.profile = { ...DEFAULT_PROFILE, ...snap.data() }; sanitizeProfile(); lsSet('pr.profile', S.profile); }
-      else if (S.profile.onboarded) saveProfile();
-    } catch {}
-  }
+  }, onErr('lots'));
+  try {
+    const snap = await f.getDoc(f.doc(db, 'users', S.me.id));
+    if (snap.exists()) { S.profile = { ...DEFAULT_PROFILE, ...snap.data() }; sanitizeProfile(); lsSet('pr.profile', S.profile); }
+    else if (S.profile.onboarded) saveProfile();
+  } catch (e) { console.warn('ParkRadar: could not load saved settings', e); }
   render();
 }
 
@@ -1697,6 +1735,7 @@ function startReport() {
 async function submitReport() {
   const d = S.draft; if (!d) return;
   const now = Date.now();
+  d.x = clamp(d.x, 0, MAP_W); d.y = clamp(d.y, 0, MAP_H);
   const place = describe(d.x, d.y).place;
   if (d.kind === 'closure') {
     if (!d.note.trim()) { toast('Add a short description of what\'s closed.'); $('[data-draft="note"]')?.focus(); return; }
@@ -1763,12 +1802,12 @@ document.addEventListener('click', async e => {
     case 'rSubmit': b.disabled = true; await submitReport(); b.disabled = false; break;
     case 'confirm': {
       const r = S.reports.find(x => x.id === id); if (!r) break;
-      if (await patchReport(id, { confirms:{ ...(r.confirms || {}), [myKey()]:Date.now() } })) toast('Thanks. The report stays up another 15 minutes.');
+      if (await stampReport(id, 'confirms')) toast('Thanks. The report stays up another 15 minutes.');
       break;
     }
     case 'gone': {
       const r = S.reports.find(x => x.id === id); if (!r) break;
-      if (await patchReport(id, { gone:{ ...(r.gone || {}), [myKey()]:Date.now() } })) { toast(goneCount(r) + 1 >= 2 ? 'Thanks. The report has been cleared.' : 'Thanks. One more "gone" clears it.'); closeSheet(); }
+      if (await stampReport(id, 'gone')) { toast(goneCount(r) + 1 >= 2 ? 'Thanks. The report has been cleared.' : 'Thanks. One more "gone" clears it.'); closeSheet(); }
       break;
     }
     case 'removeMine': if (await deleteReport(id)) { toast('Your report was removed.'); closeSheet(); } break;
