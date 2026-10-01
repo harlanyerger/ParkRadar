@@ -73,9 +73,9 @@ button{cursor:pointer;border:0;background:none;padding:0}
 @media (min-width:600px){#app{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.12)}}
 
 /* header */
-.top{flex:none;padding:calc(10px + var(--sat)) max(16px, env(safe-area-inset-right,0px)) 12px max(16px, env(safe-area-inset-left,0px));background:var(--brand-navy);color:#fff;z-index:5}
+.top{flex:none;padding:calc(8px + var(--sat)) max(16px, env(safe-area-inset-right,0px)) 10px max(16px, env(safe-area-inset-left,0px));background:var(--brand-navy);color:#fff;z-index:5}
 .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px}
-.wm{position:relative;display:inline-flex;align-items:baseline;font-weight:850;font-stretch:112%;font-size:23px;letter-spacing:-.02em;line-height:1;color:#fff}
+.wm{position:relative;display:inline-flex;align-items:baseline;font-weight:850;font-stretch:112%;font-size:21px;letter-spacing:-.02em;line-height:1;color:#fff}
 .wm .wm-r{position:relative;color:#FF4052}
 .arcs{position:absolute;left:.06em;top:-.52em;width:.5em;height:.5em;overflow:visible}
 .arcs path{fill:none;stroke:#FF4052;stroke-width:2.4;stroke-linecap:round}
@@ -83,18 +83,10 @@ button{cursor:pointer;border:0;background:none;padding:0}
 .mode i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55)}
 .mode.on{color:#fff}
 .mode.on i{background:var(--a-plenty);box-shadow:0 0 0 3px color-mix(in srgb,var(--a-plenty) 25%,transparent)}
-.search{margin-top:10px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid transparent;border-radius:12px;padding:0 12px;height:44px}
-.search svg{width:18px;height:18px;flex:none;color:#5B6B82}
-.search input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px;height:100%;color:#10223F;-webkit-appearance:none;appearance:none}
-.search input::placeholder{color:#6B7A90}
-:root[data-theme="dark"] .search{background:rgba(255,255,255,.12)}
-:root[data-theme="dark"] .search input{color:#fff}
-:root[data-theme="dark"] .search input::placeholder,:root[data-theme="dark"] .search svg{color:rgba(255,255,255,.6)}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .search{background:rgba(255,255,255,.12)}
-  :root:not([data-theme="light"]) .search input{color:#fff}
-  :root:not([data-theme="light"]) .search input::placeholder,:root:not([data-theme="light"]) .search svg{color:rgba(255,255,255,.6)}
-}
+.search{position:absolute;left:12px;right:12px;top:12px;z-index:3;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 16px;height:46px;box-shadow:0 2px 10px rgba(15,27,46,.14)}
+.search svg{width:18px;height:18px;flex:none;color:var(--muted)}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px;height:100%;color:var(--ink);-webkit-appearance:none;appearance:none}
+.search input::placeholder{color:var(--muted)}
 .search:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 22%,transparent)}
 
 main{position:relative;flex:1;min-height:0}
@@ -129,10 +121,11 @@ main{position:relative;flex:1;min-height:0}
 #mapWrap > .mapboxgl-control-container > div{z-index:auto}
 #mapWrap:not(.mb) > .mapboxgl-control-container{display:none}
 #mapWrap .mapboxgl-ctrl-attrib{font-size:10.5px;line-height:18px}
-.mapmenu{position:absolute;right:64px;top:132px;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.mapmenu{position:absolute;right:64px;top:68px;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .mapmenu button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;text-align:left;font-weight:600;font-size:15px}
 .mapmenu button + button{border-top:1px solid var(--line)}
 .mapmenu button svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.mapmenu.hi{top:12px}
 .mapmenu .ck{margin-left:auto;color:var(--navy)}
 .mapmenu .ck svg{color:inherit}
 :root[data-theme="dark"] .mapmenu .ck{color:#8FB3FF}
@@ -144,12 +137,12 @@ main{position:relative;flex:1;min-height:0}
 .bl{font-size:11px;font-weight:700;fill:#10223F;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;cursor:pointer}
 .rl{font-size:9.5px;font-weight:600;font-style:italic;fill:var(--muted);text-anchor:middle}
 .gl{font-size:15px;font-weight:800;font-stretch:110%;fill:#1E4D22;text-anchor:middle;paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:4px;stroke-linejoin:round;cursor:pointer}
-.pbg{fill:var(--navy);stroke:var(--surface);stroke-width:2.5}
-.ptx{fill:#fff;font-size:14px;font-weight:800;text-anchor:middle}
-.lvl{stroke:var(--surface);stroke-width:2}
+.pbg{fill:var(--navy);stroke:var(--surface);stroke-width:2}
+.ptx{fill:#fff;font-size:12px;font-weight:800;text-anchor:middle}
+.lvl{stroke:var(--surface);stroke-width:1.8}
 .lvl.rep{fill:var(--lc)}
-.lvl.est{fill:var(--surface);stroke:var(--lc);stroke-width:2.6}
-.plabel{font-size:11px;font-weight:700;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--halo);stroke-width:3.5px;stroke-linejoin:round}
+.lvl.est{fill:var(--surface);stroke:var(--lc);stroke-width:2.2}
+.plabel{font-size:11px;font-weight:600;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--halo);stroke-width:3.5px;stroke-linejoin:round}
 .lotpin.sel .pbg{fill:var(--red)}
 .ebg{fill:var(--red);stroke:#fff;stroke-width:2.5}
 .eic{fill:#fff}
@@ -171,6 +164,24 @@ main{position:relative;flex:1;min-height:0}
 
 
 /* map overlay UI */
+.ctrls.round{border-radius:999px}
+.ctrls.mt{margin-bottom:10px;position:static;border-radius:999px}
+.ctrlcol{position:absolute;right:12px;top:68px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.ctrlcol .ctrls{position:static}
+.ctrlcol.hi{top:12px}
+.mapcard2{position:absolute;left:12px;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.mapcard2 .status{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px}
+.mapcard2 .status .ic{width:36px;height:36px}
+.mapcard2 .status .ic svg{width:19px;height:19px}
+.mapcard2 .status .row-s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapcard2 .acts{display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;border-top:1px solid var(--line);height:44px}
+.mapcard2 .acts i{width:1px;height:22px;background:var(--line)}
+.mapcard2 .acts button{display:flex;align-items:center;justify-content:center;gap:6px;height:100%;padding:0 8px;font-weight:650;font-size:14px;min-width:0}
+.mapcard2 .acts button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapcard2 .acts button svg{width:16px;height:16px;flex:none;color:var(--navy)}
+:root[data-theme="dark"] .mapcard2 .acts button svg{color:#8FB3FF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mapcard2 .acts button svg{color:#8FB3FF}}
+
 #mapUI{position:absolute;inset:0;pointer-events:none}
 #mapUI > *{pointer-events:auto}
 .ctrls{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;background:var(--surface);border-radius:12px;box-shadow:var(--shadow-sm);border:1px solid var(--line);overflow:hidden}
@@ -330,7 +341,7 @@ button.row:hover{background:var(--surface-2)}
 .about p:last-child{margin:0}
 
 /* search results */
-#searchRes{position:absolute;left:12px;right:12px;top:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;z-index:6;max-height:60%;overflow-y:auto}
+#searchRes{position:absolute;left:12px;right:12px;top:66px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;z-index:6;max-height:60%;overflow-y:auto}
 
 /* tabs */
 .tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;background:var(--surface);border-top:1px solid var(--line);padding:6px max(4px, env(safe-area-inset-right,0px)) max(6px, calc(var(--sab) - 8px)) max(4px, env(safe-area-inset-left,0px));z-index:5}
@@ -407,12 +418,12 @@ button.row:hover{background:var(--surface-2)}
       <div class="wm" role="img" aria-label="ParkRadar"><span>Park</span><span class="wm-r"><svg class="arcs" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 10.5A3.5 3.5 0 0 1 5.5 14"/><path d="M2 6.5A7.5 7.5 0 0 1 9.5 14"/><path d="M2 2.5A11.5 11.5 0 0 1 13.5 14"/></svg>Radar</span></div>
       <button class="mode" id="modePill" data-act="modeInfo"><i></i><span>Connecting</span></button>
     </div>
+  </header>
+  <main id="main">
     <label class="search" id="searchBox">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
       <input id="q" type="search" placeholder="Search lots and places" autocomplete="off" aria-label="Search lots and places">
     </label>
-  </header>
-  <main id="main">
     <div id="mapWrap">
       <div id="mbmap" aria-hidden="true"></div>
       <svg id="map" preserveAspectRatio="xMidYMid meet" aria-label="Campus parking map">
@@ -1037,7 +1048,7 @@ function syncMb() {
 // Keeps the Mapbox logo and attribution just above whatever covers the bottom of the map.
 function placeMbCtrls() {
   const cc = $('#mapWrap > .mapboxgl-control-container'); if (!cc) return;
-  const sh = $('#sheet'), card = $('.mapcard');
+  const sh = $('#sheet'), card = $('.mapcard2');
   const bottom = !sh.hidden ? sh.offsetHeight : (S.tab === 'map' && card ? card.offsetHeight + 12 : 0);
   cc.style.display = S.tab === 'map' ? '' : 'none';
   for (const el of cc.querySelectorAll('.mapboxgl-ctrl-bottom-left,.mapboxgl-ctrl-bottom-right')) el.style.bottom = (bottom - 4) + 'px';
@@ -1053,7 +1064,7 @@ new ResizeObserver(placeMbCtrls).observe($('#sheet'));
 
 const PX = { pl:6.4, bl:6.4, gl:8.8 };
 function rescale() {
-  const k = kpx(), far = k > 2.4, vfar = k > 3.8;
+  const k = kpx(), far = k > 2.4, vfar = k > 3.8, near = k <= 1.4;
   mapEl.classList.toggle('far', far);
   mapEl.classList.toggle('vfar', vfar);
   const s = mapSize(), offX = (s.w*k - vb.w) / 2, offY = (s.h*k - vb.h) / 2;
@@ -1069,13 +1080,13 @@ function rescale() {
     const c = g.classList;
     if (c.contains('lotpin')) {
       const pri = c.contains('sel') || c.contains('zf'), oth = c.contains('oth'), minor = c.contains('minor');
-      const show = pri || (vfar ? !(oth || minor) : far ? !(oth && minor) : true);
+      const show = pri || (near ? true : !far ? !oth : (!oth && !minor));
       g.style.display = show ? '' : 'none';
       const lab = g.querySelector('.plabel');
       if (!show) return;
-      const [sx, sy] = scr(g); kept.push([sx - 14, sy - 14, sx + 14, sy + 14]);
-      const want = !vfar && (pri || !far || (!oth && !minor));
-      if (want) cand.push({ el:lab, sx, sy:sy + 26, w:lab.textContent.length * PX.pl + 6, pri:pri ? 0 : oth ? 4 : 2 });
+      const [sx, sy] = scr(g); kept.push([sx - 12, sy - 12, sx + 12, sy + 12]);
+      const want = pri || (near ? true : !far ? (!oth && !minor) : false);
+      if (want) cand.push({ el:lab, sx, sy:sy + 21, w:lab.textContent.length * PX.pl + 6, pri:pri ? 0 : oth ? 4 : 2 });
       else lab.style.display = 'none';
     } else { const [sx, sy] = scr(g); kept.push([sx - 15, sy - 15, sx + 15, sy + 15]); }
   });
@@ -1113,7 +1124,7 @@ function animateTo(t) {
 }
 function occluded() {
   const sh = $('#sheet');
-  return { top: 60, bottom: !sh.hidden ? sh.offsetHeight : (S.tab === 'map' ? 120 : 0) };
+  return { top: !sh.hidden ? 12 : 64, bottom: !sh.hidden ? sh.offsetHeight : (S.tab === 'map' ? 126 : 0) };
 }
 function fitBox(x0, y0, x1, y1, animate = true, minW = 420) {
   const s = mapSize(), o = occluded();
@@ -1281,9 +1292,9 @@ function renderPins() {
     if (l.size < 3000) cls += ' minor';
     if (hl === l.id) cls += ' sel';
     s += `<g class="${cls}" data-s="${c.x},${c.y}" data-tap="lot:${l.id}">
-      <circle r="13" class="pbg"/><text class="ptx" y="5">P</text>
-      <circle cx="10" cy="-10" r="5.5" class="lvl ${st.reported ? 'rep' : 'est'}" style="--lc:${lv.color}"/>
-      <text class="plabel" y="30">${esc(l.short || l.name)}</text></g>`;
+      <circle r="11" class="pbg"/><text class="ptx" y="4.2">P</text>
+      <circle cx="8" cy="-8" r="4.5" class="lvl ${st.reported ? 'rep' : 'est'}" style="--lc:${lv.color}"/>
+      <text class="plabel" y="25">${esc(l.short || l.name)}</text></g>`;
   }
   const act = activeReports();
   for (const r of act.filter(r => r.kind === 'closure')) {
@@ -1309,7 +1320,7 @@ function syncHeader() {
   const pill = $('#modePill');
   pill.classList.toggle('on', S.mode === 'live');
   pill.querySelector('span').textContent = S.mode === 'live' ? 'Live' : S.mode === 'local' ? 'This device' : 'Connecting';
-  $('#searchBox').hidden = S.tab !== 'map';
+  $('#searchBox').hidden = S.tab !== 'map' || !!S.sheet || !!S.pick;
 }
 function renderTabs() {
   const n = activeReports().filter(r => r.kind === 'enforcement').length;
@@ -1330,34 +1341,31 @@ function chips(act, opts, cur) {
 function renderMapUI() {
   const ui = $('#mapUI');
   if (S.tab !== 'map') { ui.innerHTML = ''; return; }
-  let h = `<div class="ctrls"><button data-act="zoomIn" aria-label="Zoom in">${I.plus}</button><button data-act="zoomOut" aria-label="Zoom out">${I.minus}</button><button data-act="fit" aria-label="Show the whole campus">${I.fit}</button>${MAPBOX_TOKEN ? `<button data-act="mapMenu" aria-label="Map type" aria-expanded="${S.mapMenu}">${I.layers}</button>` : ''}</div>`;
+  let h = `<div class="ctrlcol${S.sheet || S.pick ? ' hi' : ''}">${MAPBOX_TOKEN ? `<div class="ctrls mt"><button data-act="mapMenu" aria-label="Map type" aria-expanded="${S.mapMenu}">${I.layers}</button></div>` : ''}<div class="ctrls round"><button data-act="zoomIn" aria-label="Zoom in">${I.plus}</button><button data-act="zoomOut" aria-label="Zoom out">${I.minus}</button></div></div>`;
   if (S.mapMenu) {
     const cur = activeMapMode();
     const opt = (v, label, icon) => `<button role="menuitemradio" aria-checked="${cur === v}" data-act="mapMode" data-v="${v}">${icon}<span>${label}</span>${cur === v ? `<span class="ck">${I.check}</span>` : ''}</button>`;
-    h += `<div class="mapmenu" role="menu" aria-label="Map type">${opt('streets', 'Streets', I.mapStreets)}${opt('satellite', 'Satellite', I.mapSat)}${opt('campus', 'Ole Miss parking map', I.mapCampus)}</div>`;
+    h += `<div class="mapmenu${S.sheet || S.pick ? ' hi' : ''}" role="menu" aria-label="Map type">${opt('streets', 'Streets', I.mapStreets)}${opt('satellite', 'Satellite', I.mapSat)}${opt('campus', 'Ole Miss parking map', I.mapCampus)}</div>`;
   }
   if (S.pick === 'report') h += `<div class="pickbar"><span>Tap the map where you saw it</span></div>`;
   else if (S.pick === 'car') h += `<div class="pickbar"><span>Tap the map where you parked</span><button data-act="cancelPick">Cancel</button></div>`;
   else if (S.pick === 'dest') h += `<div class="pickbar"><span>Tap where you're headed</span><button data-act="cancelPick">Cancel</button></div>`;
-  else if (!S.sheet) h += `<button class="pill" data-act="planWalk">${I.walk}Plan my walk</button>`;
   if (!S.sheet && !S.pick) {
     const act = activeReports().filter(r => r.kind === 'enforcement');
     const c = S.profile.car;
-    const carChip = c
-      ? `<button class="carchip" data-act="openCar"><span class="ci">${I.car}</span><span class="ct">Your car: ${esc(carPlaceText())}</span><em>${ago(c.at)}</em></button>`
-      : `<button class="carchip ghost" data-act="carPick"><span class="ci">${I.car}</span><span class="ct">Save where I parked</span></button>`;
-    let card;
+    let status;
     if (act.length) {
       const r = act[0], d = describe(r.x, r.y);
-      card = `<button class="card" data-act="report" data-id="${esc(r.id)}"><span class="ic enf solid">${I.car}</span>
+      status = `<button class="status" data-act="report" data-id="${esc(r.id)}"><span class="ic enf solid">${I.car}</span>
         <span class="row-main"><span class="row-t">Enforcement reported</span>
-        <span class="row-s">${ago(r.at)}, ${esc(lc(d.text))}</span>
-        <span class="row-s">${c ? esc(carDistText(r.x, r.y)) + '. ' : ''}Seen by ${seenBy(r)} ${seenBy(r) === 1 ? 'student' : 'students'}</span></span>${I.chev}</button>`;
-      if (act.length > 1) card += `<button class="more" data-act="tab" data-v="alerts">${act.length - 1} more active</button>`;
+        <span class="row-s">${ago(r.at)} \u00B7 ${esc(d.text)}${act.length > 1 ? ` \u00B7 +${act.length - 1} more` : ''}</span></span>${I.chev}</button>`;
     } else {
-      card = `<div class="card"><span class="ic quiet">${I.radar}</span><span class="row-main"><span class="row-t">All quiet</span><span class="row-s">No enforcement reported in the last 15 minutes.</span></span></div>`;
+      status = `<div class="status"><span class="ic quiet">${I.radar}</span><span class="row-main"><span class="row-t">All quiet</span><span class="row-s">No enforcement reported in the last 15 minutes</span></span></div>`;
     }
-    h += `<div class="mapcard">${carChip}${card}</div>`;
+    const carBtn = c
+      ? `<button data-act="openCar">${I.car.replace('<svg', '<svg width="16" height="16"')}<span>Your car: ${esc(carPlaceText())}</span></button>`
+      : `<button data-act="carPick">${I.car.replace('<svg', '<svg width="16" height="16"')}<span>Save where I parked</span></button>`;
+    h += `<div class="mapcard2">${status}<div class="acts">${carBtn}<i></i><button data-act="planWalk">${I.walk}<span>Plan my walk</span></button></div></div>`;
   }
   ui.innerHTML = h;
   placeMbCtrls();
