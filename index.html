@@ -316,6 +316,31 @@ main{position:relative;flex:1;min-height:0}
 .opt[aria-pressed="true"]{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy) inset}
 .opt .w{margin-left:auto;text-align:right;font-weight:750;white-space:nowrap}
 .opt .w small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+/* trip planner */
+.chiprow{display:flex;gap:8px;overflow-x:auto;margin:0 -18px;padding:2px 18px;scrollbar-width:none}
+.chiprow::-webkit-scrollbar{display:none}
+.chiprow .chip{flex:none}
+.pl-row{display:flex;gap:16px;align-items:flex-start;margin-top:12px}
+.pl-row .field{margin-top:0}
+.field input.pl-time{width:auto;height:36px;padding:0 10px;border-radius:10px;font-size:16px}
+.stepper{display:inline-flex;align-items:center;height:36px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2)}
+.stepper button{width:38px;height:36px;font-size:18px;font-weight:700}
+.stepper b{min-width:62px;text-align:center;font-size:14px;font-weight:650}
+.dayrow{display:flex;gap:6px;margin-top:12px}
+.dayrow .chip{flex:1;justify-content:center;padding:0;min-width:0}
+.plan-card{margin-top:16px;padding:14px;border-radius:14px;background:var(--brand-navy);color:#fff}
+.plan-card .pc-s{font-size:13.5px;font-weight:600;opacity:.8}
+.plan-card .pc-b{font-size:28px;font-weight:850;font-stretch:108%;line-height:1.15;margin:4px 0}
+.plan-card .pc-p{font-size:15px;font-weight:650}
+.plan-card .pc-m{font-size:13.5px;opacity:.8;margin-top:6px}
+.cbar{height:7px;border-radius:99px;background:rgba(255,255,255,.22);margin:8px 0 2px;overflow:hidden}
+.cbar i{display:block;height:100%;border-radius:99px;background:var(--cc)}
+.pl-basis{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.pl-early{display:flex;gap:10px;align-items:center;margin-top:10px;padding:12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px;font-weight:600}
+.pl-early svg{flex:none;width:20px;height:20px;color:var(--a-plenty)}
+.badge{flex:none;width:52px;height:30px;border-radius:9px;background:var(--cc);color:#fff;font-weight:800;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+.pl-h{margin:16px 0 8px;font-size:13.5px;color:var(--muted);font-weight:700}
+.ic.nav{background:var(--navy);color:#fff}
 
 /* panels */
 .pn{padding:18px 16px 28px}
@@ -613,6 +638,7 @@ const S = {
   tab:'map', sheet:null, pick:null, q:'', mapMode: lsGet('pr.mapMode', 'streets'), mapMenu:false, carMenu:false, loc:null, locPending:null,
   lotsSeg:'avail', lotsFilter:'mine', zonesFilter:'mine', alertsSeg:'all',
   zoneFocus:null, walk:null, draft:null,
+  plan:{ dest:null, minutes:600, day:0, drive:10, ...lsGet('pr.plan', {}) }, planPicked:null, hist: lsGet('pr.hist', []),
   reports: lsGet('pr.reports', []), lots: lsGet('pr.lots', {}),
   mode:'connecting', db:null, me:{ id:null, name:'', avatar:null }, readOnly:false,
   now: Date.now(), loadedAt: Date.now(), obStep:0,
@@ -796,6 +822,160 @@ function lotStatus(l) {
   if (d && S.now - d.at < AVAIL_TTL && LEVELS[d.level]) return { level:d.level, reported:true, at:d.at };
   return { level:typicalLevel(l), reported:false, lastAt:d?.at };
 }
+/* ---------------- predicting parking from past reports ----------------
+   Starts from typical weekday traffic for each lot, then pulls the estimate toward what students reported around the
+   same time of day on past weekdays. The more reports there are, the less the typical traffic counts. Reports from the
+   same kind of day (Mon/Wed/Fri or Tue/Thu) and from recent weeks count more. */
+const OL = { chance:{ plenty:.97, some:.85, few:.5, full:.12 }, priorW:1.5, win:60, halfLife:28, keepDays:56 };
+const olTraffic = h => h < 7 ? .1 : h < 8 ? .35 : h < 9.5 ? .7 : h < 14 ? .95 : h < 16 ? .75 : h < 18 ? .45 : .2;
+const OL_ANCHORS = [[.2, .97], [.5, .85], [.74, .5], [.95, .12], [1.1, .04]];
+function olChanceForLoad(v) {
+  const a = OL_ANCHORS;
+  if (v <= a[0][0]) return a[0][1];
+  for (let i = 1; i < a.length; i++) if (v <= a[i][0]) { const [x0, y0] = a[i - 1], [x1, y1] = a[i]; return y0 + (y1 - y0) * (v - x0) / (x1 - x0); }
+  return a[a.length - 1][1];
+}
+const olDayGroup = t => { const w = new Date(t).getDay(); return w === 1 || w === 3 || w === 5 ? 0 : w === 2 || w === 4 ? 1 : null; };
+const olMinOfDay = t => { const d = new Date(t); return d.getHours() * 60 + d.getMinutes(); };
+function olPrior(demand, t) {
+  const m = olMinOfDay(t); let sum = 0;
+  for (const o of [-15, -7.5, 0, 7.5, 15]) sum += olChanceForLoad(olTraffic((m + o) / 60) * demand);
+  return sum / 5;
+}
+// One report per person, lot and half hour (the latest), so double taps or spam don't count twice.
+function olCleaned(events) {
+  const latest = new Map();
+  for (const e of events) {
+    const k = `${e.by}|${e.lot}|${Math.floor(e.at / 1800000)}`, o = latest.get(k);
+    if (!o || o.at < e.at) latest.set(k, e);
+  }
+  return [...latest.values()];
+}
+function olPredict(demand, events, live, at, now) {
+  const group = olDayGroup(at);
+  if (group === null) return { chance:.97, reports:0, live:false, weekend:true };
+  let sum = OL.priorW * olPrior(demand, at), weight = OL.priorW, count = 0;
+  const target = olMinOfDay(at);
+  for (const e of events) {
+    const c = OL.chance[e.level], g = olDayGroup(e.at);
+    if (c === undefined || g === null) continue;
+    const gap = Math.abs(olMinOfDay(e.at) - target), age = Math.max(0, (now - e.at) / 86400000);
+    if (gap >= OL.win || age > OL.keepDays) continue;
+    const w = (1 - gap / OL.win) * (g === group ? 1 : .5) * Math.pow(.5, age / OL.halfLife);
+    if (w <= .02) continue;
+    sum += w * c; weight += w; count++;
+  }
+  let usedLive = false;
+  if (live && OL.chance[live.level] !== undefined) {
+    const ageMin = (now - live.at) / 60000, ahead = (at - now) / 60000;
+    if (ageMin >= 0 && ageMin < 45 && ahead > -10 && ahead < 60) { const w = 2 * (1 - ageMin / 45); sum += w * OL.chance[live.level]; weight += w; usedLive = true; }
+  }
+  return { chance: Math.min(.98, Math.max(.03, sum / weight)), reports:count, live:usedLive, weekend:false };
+}
+const olPercent = c => Math.min(95, Math.max(5, Math.round(c * 20) * 5));      // to the nearest 5 percent, never certain
+const olColor = c => c >= .8 ? 'var(--a-plenty)' : c >= .6 ? 'var(--a-some)' : c >= .35 ? 'var(--a-few)' : 'var(--a-full)';
+
+// Every "how full is it?" report is kept (here and in the shared `history` collection) so predictions can learn.
+let histCache = null, histSaveT = null, histSince = lsGet('pr.histSince', 0), histChecked = 0, histSyncing = false;
+function eventsByLot() {
+  if (histCache) return histCache;
+  const g = {};
+  for (const e of olCleaned(S.hist)) (g[e.lot] = g[e.lot] || []).push(e);
+  return histCache = g;
+}
+function mergeEvents(list) {
+  const known = new Set(S.hist.map(e => e.id)), cutoff = Date.now() - OL.keepDays * 86400000;
+  let added = false;
+  for (const e of list) if (e.at >= cutoff && !known.has(e.id)) { S.hist.push(e); known.add(e.id); added = true; }
+  if (!added) return;
+  if (S.hist.length > 6000) S.hist = S.hist.sort((a, b) => b.at - a.at).slice(0, 6000);
+  histCache = null;
+  clearTimeout(histSaveT); histSaveT = setTimeout(() => lsSet('pr.hist', S.hist), 500);
+}
+const newEvent = (lot, level, at) => ({ id:'e' + at.toString(36) + Math.floor(1000 + Math.random() * 9000), lot, level, at, by:myKey() });
+// Each lot's latest report also teaches the predictions. This covers reports made before history existed, and from
+// phones that haven't updated yet. Anything also in the history is counted once.
+function seedEvents(lots) {
+  mergeEvents(Object.entries(lots).filter(([, r]) => r && typeof r.at === 'number' && OL.chance[r.level] !== undefined)
+    .map(([id, r]) => ({ id:`s-${id}-${r.at}`, lot:id, level:r.level, at:r.at, by:r.by || '' })));
+}
+async function refreshHistory(force = false) {
+  if (!S.db || histSyncing) return;
+  if (!force && Date.now() - histChecked < 10 * MIN) return;
+  histSyncing = true;
+  try {
+    const { f, db } = S.db;
+    let since = Math.max(histSince - 60000, Date.now() - OL.keepDays * 86400000);
+    for (let i = 0; i < 5; i++) {
+      const snap = await f.getDocs(f.query(f.collection(db, 'history'), f.where('at', '>=', since), f.orderBy('at', 'asc'), f.limit(2000)));
+      const batch = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(e => typeof e.at === 'number' && e.lot && e.level);
+      mergeEvents(batch);
+      if (!batch.length) break;
+      const last = Math.max(...batch.map(e => e.at));
+      histSince = Math.max(histSince, last);
+      if (snap.size < 2000) break;
+      since = last;
+    }
+    histChecked = Date.now(); lsSet('pr.histSince', histSince);
+    if (S.sheet && S.sheet.type === 'plan' && !isTyping()) renderSheet();
+  } catch { /* history is optional: predictions fall back on what this device has seen */ }
+  histSyncing = false;
+}
+
+/* ---------------- trip planner: when to leave, and where to park ---------------- */
+const PLAN_SETTLE = 5;     // minutes from the door to your seat once you've walked there
+const savePlan = () => lsSet('pr.plan', S.plan);
+// When class starts, as a real date: the next time that clock time (and weekday, if one is chosen) comes around.
+function planStart() {
+  const p = S.plan, h = Math.floor(p.minutes / 60), m = p.minutes % 60;
+  for (let i = 0; i < 15; i++) {
+    const d = new Date(S.now); d.setDate(d.getDate() + i); d.setHours(h, m, 0, 0);
+    if (d.getTime() <= S.now) continue;
+    const wd = d.getDay();
+    if (p.day ? wd === p.day - 1 : (wd >= 1 && wd <= 5)) return d;      // with no weekday chosen, skip the weekend
+  }
+  return new Date(S.now);
+}
+let planCand = null;
+function planCandidates(place) {
+  const key = `${place.id}|${S.profile.permit}|${S.profile.resArea || ''}`;
+  if (planCand && planCand.key === key) return planCand.list;
+  let list = LOTS.map(l => ({ lot:l, permit:permitStatus(l), crow:dist(center(l), place) }));
+  const allowed = list.filter(o => o.permit !== 'no');
+  if (allowed.length) list = allowed;
+  list.sort((a, b) => a.crow - b.crow);
+  const out = list.slice(0, 18).map(o => ({ lot:o.lot, permit:o.permit, route:route(center(o.lot), place) }));
+  planCand = { key, list:out };
+  return out;
+}
+function planOutlook(lot, at) {
+  const l = S.lots[lot.id], live = l && LEVELS[l.level] ? { level:l.level, at:l.at } : null;
+  return olPredict(lot.demand, eventsByLot()[lot.id] || [], live, at.getTime(), S.now);
+}
+// How much earlier to arrive to get a clearly better chance, if arriving earlier helps.
+function earlierArrival(o) {
+  for (const shift of [15, 30, 45]) {
+    const p = planOutlook(o.lot, new Date(o.arrive.getTime() - shift * 60000));
+    if (p.chance >= o.chance + .10) return { minutes:shift, chance:p.chance };
+  }
+  return null;
+}
+function planResult() {
+  const place = S.plan.dest && PLACE_BY[S.plan.dest]; if (!place) return null;
+  const start = planStart(), weekend = olDayGroup(start.getTime()) === null;
+  const opts = planCandidates(place).map(c => {
+    const walk = walkMin(c.route.d);
+    const arrive = new Date(start.getTime() - (walk + PLAN_SETTLE) * 60000);
+    const p = planOutlook(c.lot, arrive);
+    const extra = p.chance >= .85 ? 0 : p.chance >= .6 ? 5 : 10;         // lower odds mean more time to look
+    const leave = new Date(arrive.getTime() - (S.plan.drive + extra) * 60000);
+    const payPenalty = c.permit === 'pay' && S.profile.permit !== 'vis' ? 12 : 0;   // paying is a last resort with a permit
+    return { lot:c.lot, permit:c.permit, route:c.route, walk, chance:p.chance, reports:p.reports, live:p.live, arrive, leave,
+             cost: walk + (1 - p.chance) * 20 + payPenalty };
+  }).sort((a, b) => (a.cost - b.cost) || (a.lot.id < b.lot.id ? -1 : 1));
+  const top = opts.slice(0, 4), selected = top.find(o => o.lot.id === S.planPicked) || top[0] || null;
+  return { dest:place, start, weekend, options:top, selected, earlier: selected && !weekend ? earlierArrival(selected) : null };
+}
 const lastSeen = r => Math.max(Number(r.at) || 0, ...Object.values(r.confirms || {}).filter(v => typeof v === 'number'));
 const goneCount = r => Object.keys(r.gone || {}).length;
 function isActive(r) {
@@ -875,10 +1055,16 @@ async function setLotLevel(id, level) {
   const data = { level, at:Date.now(), by:myKey() };
   if (S.db) {
     const { f, db } = S.db;
-    try { await withRetry(() => f.setDoc(f.doc(db, 'lots', id), data)); return true; }
+    try {
+      await withRetry(() => f.setDoc(f.doc(db, 'lots', id), data));
+      const ev = newEvent(id, level, data.at);
+      mergeEvents([ev]);
+      f.setDoc(f.doc(db, 'history', ev.id), { lot:id, level, at:ev.at, by:ev.by }).catch(() => {});   // history is optional: a failure never blocks the report
+      return true;
+    }
     catch (e) { handleWriteErr(e); return false; }
   }
-  S.lots[id] = data; persistLocal(); refreshLive(); return true;
+  S.lots[id] = data; mergeEvents([newEvent(id, level, data.at)]); persistLocal(); refreshLive(); return true;
 }
 let pruning = false;
 // Clears out this person's own stale reports. The rules only let authors delete their reports;
@@ -942,7 +1128,7 @@ async function initRuntime() {
   f.onSnapshot(f.collection(db, 'lots'), snap => {
     const next = {};
     for (const d of snap.docs) next[d.id] = d.data();
-    S.lots = next; refreshLive();
+    S.lots = next; seedEvents(next); refreshLive();
   }, onErr('lots'));
   try {
     const snap = await f.getDoc(f.doc(db, 'users', S.me.id));
@@ -950,6 +1136,7 @@ async function initRuntime() {
     else if (S.profile.onboarded) saveProfile();
   } catch (e) { console.warn('ParkRadar: could not load saved settings', e); }
   render();
+  refreshHistory(true);
 }
 
 function maybeAlert(r) {
@@ -1310,6 +1497,7 @@ function rankLots(dest) {
 }
 function highlightedLot() {
   if (S.sheet && S.sheet.type === 'lot') return S.sheet.id;
+  if (S.sheet && S.sheet.type === 'plan' && S.plan.dest) { const r = planResult(); return r && r.selected ? r.selected.lot.id : null; }
   const wp = S.sheet && S.sheet.type === 'walk' ? walkPlan() : null;
   return wp && wp.lot ? wp.lot.id : null;
 }
@@ -1325,7 +1513,8 @@ function renderLots() {
   $('#selL').innerHTML = s;
 }
 function renderRoute() {
-  const wp = S.sheet && S.sheet.type === 'walk' ? walkPlan() : null;
+  let wp = S.sheet && S.sheet.type === 'walk' ? walkPlan() : null;
+  if (!wp && S.sheet && S.sheet.type === 'plan' && S.plan.dest) { const r = planResult(); if (r && r.selected) wp = { route:r.selected.route, dest:r.dest }; }
   if (!wp) { $('#routeL').innerHTML = ''; return; }
   const pts = wp.route.pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   $('#routeL').innerHTML = `<polyline class="rt-c" points="${pts}"/><polyline class="rt" points="${pts}"/>
@@ -1422,7 +1611,7 @@ function renderMapUI() {
       ? `<button data-act="openCar">${I.car.replace('<svg', '<svg width="16" height="16"')}<span>${dcar != null ? `Your car \u00B7 ${miles(dcar)} away` : `Your car: ${esc(carPlaceText())}`}</span></button>`
       : `<button data-act="carChoose">${I.car.replace('<svg', '<svg width="16" height="16"')}<span>Save where I parked</span></button>`;
     if (S.carMenu && !c) h += `<div class="carmenu" role="menu" aria-label="Where did you park?"><button data-act="carHere">${I.loc}<span>Use my current location</span></button><button data-act="carPick">${I.pin}<span>Pick on the map</span></button></div>`;
-    h += `<div class="mapcard2">${status}<div class="acts">${carBtn}<i></i><button data-act="planWalk">${I.walk}<span>Plan my walk</span></button></div></div>`;
+    h += `<div class="mapcard2">${status}<div class="acts">${carBtn}<i></i><button data-act="planTrip">${I.clock}<span>Plan my trip</span></button></div></div>`;
   }
   ui.innerHTML = h;
   placeMbCtrls();
@@ -1451,6 +1640,7 @@ function lotRow(l) {
 function panelLots() {
   let h = `<div class="pn"><h1>Parking</h1>${seg('lotsSeg', [['avail', 'Availability'], ['zones', 'Zones']], S.lotsSeg)}`;
   if (S.lotsSeg === 'avail') {
+    h += `<button class="card" data-act="planTrip" style="margin-bottom:12px"><span class="ic nav">${I.clock}</span><span class="row-main"><span class="row-t">Heading to class?</span><span class="row-s">See when to leave and where to park</span></span>${I.chev}</button>`;
     h += `<div style="margin-bottom:12px">${chips('lotsFilter', [['mine', 'Where I can park'], ['all', 'All lots']], S.lotsFilter)}</div>`;
     let lots = LOTS.slice();
     if (S.lotsFilter === 'mine') lots = lots.filter(l => permitStatus(l) !== 'no');
@@ -1668,6 +1858,48 @@ function sheetWalk() {
   }
   return h;
 }
+function sheetPlan() {
+  const p = S.plan, r = p.dest ? planResult() : null;
+  const hh = String(Math.floor(p.minutes / 60)).padStart(2, '0') + ':' + String(p.minutes % 60).padStart(2, '0');
+  let h = sheetHead('Plan my trip', 'When to leave, and where to park');
+  h += `<div class="field" style="margin-top:0"><span>Where is your class?</span><div class="chiprow">${PLACES.map(pl => `<button class="chip" data-act="planDest" data-v="${pl.id}" aria-pressed="${p.dest === pl.id}">${esc(pl.short || pl.name)}</button>`).join('')}</div></div>`;
+  h += `<div class="pl-row"><label class="field"><span>Class starts at</span><input class="pl-time" type="time" data-bind="planTime" value="${hh}"></label>
+    <div class="field"><span>Drive to campus</span><div class="stepper"><button data-act="planDrive" data-v="-5" aria-label="Less drive time">−</button><b>${p.drive ? p.drive + ' min' : 'None'}</b><button data-act="planDrive" data-v="5" aria-label="More drive time">+</button></div></div></div>`;
+  h += `<div class="dayrow">${[[0, 'Next'], [2, 'Mon'], [3, 'Tue'], [4, 'Wed'], [5, 'Thu'], [6, 'Fri']].map(([v, t]) => `<button class="chip" data-act="planDay" data-v="${v}" aria-pressed="${p.day === v}">${t}</button>`).join('')}</div>`;
+  if (!r || !r.selected) return h + `<p class="fine">Pick where your class is to see when to leave.</p>`;
+  const sel = r.selected, late = sel.leave.getTime() < S.now - 60000;
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+  const dayWord = sameDay(r.start, new Date(S.now)) ? 'today' : sameDay(r.start, new Date(S.now + 86400000)) ? 'tomorrow' : r.start.toLocaleDateString([], { weekday:'long' });
+  h += `<div class="plan-card" style="--cc:${olColor(sel.chance)}"><div class="pc-s">Class starts ${dayWord} at ${clock(r.start)}</div>
+    <div class="pc-b">${late ? 'Leave now' : 'Leave at ' + clock(sel.leave)}</div>
+    <div class="pc-p">Park in ${esc(sel.lot.name)}. ${r.weekend ? 'Weekend lots are usually open.' : `About a ${olPercent(sel.chance)}% chance of finding a spot.`}</div>
+    ${r.weekend ? '' : `<div class="cbar"><i style="width:${Math.max(3, Math.round(sel.chance * 100))}%"></i></div>`}
+    <div class="pc-m">Be in the lot by ${clock(sel.arrive)}. It's a ${sel.walk} min walk to class.${late ? ' That time has already passed, so leave as soon as you can.' : ''}</div></div>`;
+  const basis = [];
+  if (r.weekend) basis.push('Zone rules apply on weekdays, and lots are usually open on weekends.');
+  else {
+    if (sel.live) basis.push('A student reported this lot in the last 45 minutes.');
+    basis.push(sel.reports > 0
+      ? `Based on ${sel.reports} student ${sel.reports === 1 ? 'report' : 'reports'} from around this time on past weekdays, plus typical traffic.`
+      : 'Based on typical weekday traffic. No student reports for this time yet, so it gets sharper as people report how full lots are.');
+  }
+  h += `<p class="pl-basis">${basis.join(' ')}</p>`;
+  if (r.earlier) h += `<div class="pl-early">${I.clock}<span>Leave ${r.earlier.minutes} minutes earlier, at ${clock(new Date(sel.leave.getTime() - r.earlier.minutes * 60000))}, for about a ${olPercent(r.earlier.chance)}% chance.</span></div>`;
+  h += `<div class="actions" style="margin-top:12px"><button class="btn line" data-act="planRoute">${I.walk}Show the walking route</button></div>`;
+  if (r.options.length > 1) {
+    h += `<h3 class="pl-h">Other lots near your class</h3>` + r.options.map(o => `<button class="opt" data-act="planPick" data-id="${o.lot.id}" aria-pressed="${o.lot.id === sel.lot.id}">
+      <span class="badge" style="--cc:${olColor(o.chance)}">${r.weekend ? 'Open' : olPercent(o.chance) + '%'}</span>
+      <span class="row-main"><span class="row-t">${esc(o.lot.name)}</span><span class="row-s">${esc(zoneInfo(zoneKey(o.lot)).short)}. Leave ${clock(o.leave)}, ${o.walk} min walk</span></span></button>`).join('');
+  }
+  return h + `<p class="fine">These are estimates, not promises. They include ${PLAN_SETTLE} minutes to get to your seat, and extra time to look for a spot when the odds are lower.</p>`;
+}
+function fitPlan() {
+  requestAnimationFrame(() => {
+    const r = S.plan.dest && planResult(); if (!r || !r.selected) return;
+    const xs = r.selected.route.pts.map(p => p.x), ys = r.selected.route.pts.map(p => p.y);
+    fitBox(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys), true, 520);
+  });
+}
 function sheetCar() {
   const c = S.profile.car;
   if (!c) return sheetHead('Where I parked', '') + `<button class="btn navy full" data-act="carHere">${I.loc.replace('<svg', '<svg width="18" height="18"')}Use my current location</button><button class="btn line full" style="margin-top:10px" data-act="carPick">Pick on the map</button>`;
@@ -1700,6 +1932,7 @@ function renderSheet() {
   else if (sh.type === 'report') { const r = S.reports.find(x => x.id === sh.id); if (!r || !isActive(r)) { S.sheet = null; el.hidden = true; return; } h = sheetReport(r); }
   else if (sh.type === 'newReport') h = sheetNewReport();
   else if (sh.type === 'walk') h = sheetWalk();
+  else if (sh.type === 'plan') h = sheetPlan();
   else if (sh.type === 'car') h = sheetCar();
   else if (sh.type === 'zone') h = sheetZone(sh.id);
   const wasHidden = el.hidden, st = el.scrollTop;
@@ -1920,6 +2153,15 @@ document.addEventListener('click', async e => {
       if (v === 'pt') { S.pick = 'dest'; renderSheet(); renderMapUI(); break; }
       S.pick = null; S.walk.dest = v; renderSheet(); renderMapDyn(); renderMapUI(); fitWalk(); break;
     case 'walkPick': S.walk.lot = id; renderSheet(); renderMapDyn(); fitWalk(); { const s = $('#sheet'); s.scrollTop = 0; } break;
+    case 'planTrip': S.planPicked = null; openSheet({ type:'plan' }); fitPlan(); refreshHistory(); break;
+    case 'planDest': S.plan.dest = v; S.planPicked = null; savePlan(); renderSheet(); renderMapDyn(); fitPlan(); break;
+    case 'planDay': S.plan.day = Number(v); savePlan(); renderSheet(); renderMapDyn(); break;
+    case 'planDrive': S.plan.drive = clamp(S.plan.drive + Number(v), 0, 90); savePlan(); renderSheet(); break;
+    case 'planPick': S.planPicked = id; renderSheet(); renderMapDyn(); fitPlan(); break;
+    case 'planRoute': {
+      const r = S.plan.dest && planResult(); if (!r || !r.selected) break;
+      S.walk = { from:null, lot:r.selected.lot.id, fixed:false, dest:r.dest.id }; openSheet({ type:'walk' }); fitWalk(); break;
+    }
     case 'openCar': openSheet({ type:'car' }); requestAnimationFrame(() => S.profile.car && focusPoint(S.profile.car.x, S.profile.car.y, 640)); break;
     case 'carPick': startCarPick(); break;
     case 'carChoose': if (S.profile.car) openSheet({ type:'car' }); else { S.carMenu = !S.carMenu; renderMapUI(); } break;
@@ -2003,6 +2245,10 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.dataset.bind === 'vehicle') { S.profile.vehicle = e.target.value.trim(); saveProfile(); }
+  if (e.target.dataset.bind === 'planTime') {
+    const [hh, mm] = e.target.value.split(':').map(Number);
+    if (Number.isFinite(hh) && Number.isFinite(mm)) { S.plan.minutes = hh * 60 + mm; savePlan(); renderSheet(); renderMapDyn(); }
+  }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && S.sheet && !isTyping()) closeSheet();
