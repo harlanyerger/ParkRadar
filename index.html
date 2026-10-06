@@ -170,11 +170,11 @@ main{position:relative;flex:1;min-height:0}
 .bl{font-size:11px;font-weight:700;fill:#10223F;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;cursor:pointer}
 .rl{font-size:9.5px;font-weight:600;font-style:italic;fill:var(--muted);text-anchor:middle}
 .gl{font-size:15px;font-weight:800;font-stretch:110%;fill:#1E4D22;text-anchor:middle;paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:4px;stroke-linejoin:round;cursor:pointer}
-.pbg{fill:var(--navy);stroke:var(--surface);stroke-width:2}
-.ptx{fill:#fff;font-size:12px;font-weight:800;text-anchor:middle}
-.lvl{stroke:var(--surface);stroke-width:1.8}
+.pbg{fill:var(--navy);stroke:var(--surface);stroke-width:1.8}
+.ptx{fill:#fff;font-size:10.5px;font-weight:800;text-anchor:middle}
+.lvl{stroke:var(--surface);stroke-width:1.6}
 .lvl.rep{fill:var(--lc)}
-.lvl.est{fill:var(--surface);stroke:var(--lc);stroke-width:2.2}
+.lvl.est{fill:var(--surface);stroke:var(--lc);stroke-width:2}
 .plabel{font-size:11px;font-weight:600;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--halo);stroke-width:3.5px;stroke-linejoin:round}
 .lotpin.sel .pbg{fill:var(--red)}
 .ebg{fill:var(--red);stroke:#fff;stroke-width:2.5}
@@ -309,6 +309,26 @@ main{position:relative;flex:1;min-height:0}
 .btn.full{width:100%}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .btn.big{height:54px;font-size:16px;border-radius:16px}
+.fullq{background:var(--surface-2);border-radius:14px;padding:14px;margin-bottom:14px}
+.fullq-links{display:flex;justify-content:space-between;margin-top:10px}
+.fullq-links button{font-size:13.5px;font-weight:650;color:var(--link);padding:6px 0;min-height:32px}
+.hallq{display:block;width:100%;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface-2);padding:0 12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;color:var(--ink)}
+.hallq::placeholder{color:var(--muted);opacity:1}
+.hallq:focus{border-color:var(--focus);background:var(--surface)}
+.halllist{margin-top:8px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.hallrow{display:block;width:100%;text-align:left;padding:8px 12px;min-height:46px;border-bottom:1px solid var(--line)}
+.hallrow:last-child{border-bottom:0}
+.hallgrp{padding:10px 12px 4px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.hallpin{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:40px;margin-top:8px;border:1.5px solid var(--line);border-radius:12px;font-size:14px;font-weight:650;color:var(--link)}
+.hallpin svg{flex:none}
+.hallrow .row-t,.hallrow .row-s{display:block}
+.hallrow:hover{background:var(--surface-2)}
+.hallsel{display:flex;align-items:center;gap:10px;width:100%;text-align:left;min-height:54px;padding:6px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface)}
+.hallsel .hs-ic{width:22px;height:22px;flex:none;color:var(--link)}
+.hallsel .hs-ic svg{width:22px;height:22px}
+.hallsel .row-main{flex:1;min-width:0}
+.hallsel .row-t,.hallsel .row-s{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hallsel .hs-chg{font-size:13.5px;font-weight:650;color:var(--link)}
 .fine{font-size:12.5px;color:var(--muted);text-align:center;margin:12px 0 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
@@ -651,7 +671,12 @@ const PLACES = [
 const LOT_BY = Object.fromEntries(LOTS.map(l => [l.id, l]));
 // Sorts by name with numbers in order: "North 2" before "North 10".
 const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true });
-const PLACE_BY = Object.fromEntries(PLACES.map(p => [p.id, p]));
+/* Every academic hall, for "Plan my trip". Names and what they house come from the university's catalog (catalog.olemiss.edu), positions
+   from OpenStreetMap (ODbL). Kept apart from PLACES so the map labels, search and walking shortcuts stay as they were. Same data as the
+   iPhone app's halls.json. */
+const HALLS = [{"id":"h-anderson","name":"Anderson Hall","x":1242.3,"y":858.8,"r":20,"about":"Chemical engineering"},{"id":"h-bishop","name":"Bishop Hall","x":932.3,"y":763.1,"r":28,"about":"History"},{"id":"h-bondurant","name":"Bondurant Hall","x":972.5,"y":728.0,"r":41,"about":"English and Modern Languages"},{"id":"h-brevard","name":"Brevard Hall","x":1179.4,"y":784.2,"r":27,"about":"Geology, Electrical Engineering, Civil Engineering"},{"id":"h-bryant","name":"Bryant Hall","x":1268.3,"y":631.7,"r":18,"about":"Classics, Philosophy and Religion"},{"id":"h-carrier","name":"Carrier Hall","x":1248.9,"y":821.5,"r":37,"about":"School of Engineering"},{"id":"h-conner","name":"Conner Hall","x":1123.3,"y":634.1,"r":14,"about":"School of Accountancy"},{"id":"h-coulter","name":"Coulter Hall","x":1534.7,"y":794.6,"r":35,"about":"Chemistry and Biochemistry"},{"id":"h-croft","name":"Croft Institute for International Studies","short":"Croft Institute","x":1315.7,"y":671.0,"r":17,"about":"Croft Institute for International Studies"},{"id":"h-deupree","name":"Deupree Hall","x":1095.0,"y":615.7,"r":12,"about":"Political Science"},{"id":"h-duff","name":"Duff Center for Science and Technology Innovation","short":"Duff Center","x":1330.1,"y":849.1,"r":45,"about":"Science, technology, engineering and math classrooms and labs"},{"id":"h-farley","name":"Farley Hall","x":1478.5,"y":561.6,"r":32,"about":"Journalism"},{"id":"h-faser","name":"Faser Hall","x":1422.5,"y":777.9,"r":14,"about":"School of Pharmacy"},{"id":"h-george","name":"George Hall","x":1003.8,"y":547.4,"r":14,"about":"Communication Sciences and Disorders"},{"id":"h-guyton","name":"Guyton Hall","x":640.2,"y":645.4,"r":29,"about":"School of Education"},{"id":"h-barbour","name":"Haley Barbour Center for Manufacturing Excellence","short":"Manufacturing Center","x":1191.4,"y":833.2,"r":30,"about":"Manufacturing engineering classrooms"},{"id":"h-holman","name":"Holman Hall","x":1169.4,"y":619.7,"r":14,"about":"School of Business Administration"},{"id":"h-hume","name":"Hume Hall","x":1325.9,"y":813.5,"r":24,"about":"Mathematics"},{"id":"h-isom","name":"Isom Hall","x":1258.3,"y":548.4,"r":14,"about":"Theatre Arts"},{"id":"h-kennon","name":"Kennon Observatory","x":1142.1,"y":819.4,"r":10,"about":"Physics and Astronomy"},{"id":"h-lamar","name":"Lamar Hall","x":1567.1,"y":575.1,"r":34,"about":"Sociology and Anthropology, Writing Center"},{"id":"h-leavell","name":"Leavell Hall","x":946.5,"y":576.5,"r":15,"about":"Sociology and Anthropology"},{"id":"h-lewis","name":"Lewis Hall","x":1110.7,"y":789.6,"r":28,"about":"Physics and Astronomy"},{"id":"h-meek","name":"Meek Hall","x":1128.0,"y":540.1,"r":37,"about":"Art and Music"},{"id":"h-music","name":"Music Hall","x":1783.6,"y":821.4,"r":45,"about":"Music"},{"id":"h-peabody","name":"Peabody Hall","x":1200.6,"y":639.8,"r":17,"about":"Psychology"},{"id":"h-khayat","name":"Robert C. Khayat Law Center","short":"Law Center","x":671.7,"y":967.0,"r":45,"about":"School of Law"},{"id":"h-honors","name":"Sally McDonnell Barksdale Honors College","short":"Honors College","x":1505.3,"y":526.6,"r":25,"about":"Honors College"},{"id":"h-shoemaker","name":"Shoemaker Hall","x":1382.7,"y":783.9,"r":29,"about":"Biology"},{"id":"h-turner","name":"Turner Center","x":1081.9,"y":900.7,"r":43,"about":"Health, Exercise Science and Recreation Management"},{"id":"h-ventress","name":"Ventress Hall","x":1360.4,"y":710.4,"r":11,"about":"College of Liberal Arts"},{"id":"h-weir","name":"Weir Hall","x":1063.7,"y":661.7,"r":28,"about":"Computer and Information Science"}];
+const HALL_BY = Object.fromEntries(HALLS.map(h => [h.id, h]));
+const PLACE_BY = Object.fromEntries([...PLACES, ...HALLS].map(p => [p.id, p]));
 const ZONE_KEYS = ['blue', 'red', 'fac', 'vis', 'pay', ...Object.keys(RES_AREAS).map(a => 'res:' + a)];
 const zoneKey = l => l.zone === 'res' ? 'res:' + l.area : l.zone;
 function zoneInfo(k) {
@@ -1057,7 +1082,7 @@ function earlierArrival(o) {
   return null;
 }
 function planResult() {
-  const place = S.plan.dest && PLACE_BY[S.plan.dest]; if (!place) return null;
+  const place = S.plan.dest && HALL_BY[S.plan.dest]; if (!place) return null;   // a saved choice from before the halls list is ignored
   const start = planStart(), weekend = olDayGroup(start.getTime()) === null;
   const opts = planCandidates(place).map(c => {
     const walk = walkMin(c.route.d);
@@ -1660,9 +1685,9 @@ function renderPins() {
       if (a[2] < 1100) cls += ' minor';
       if (hl === l.id) cls += ' sel';
       s += `<g class="${cls}" data-s="${a[0]},${a[1]}" data-a="${a[2]}" data-tap="lot:${l.id}">
-      <circle r="11" class="pbg"/><text class="ptx" y="4.2">P</text>
-      <circle cx="8" cy="-8" r="4.5" class="lvl ${st.reported ? 'rep' : 'est'}" style="--lc:${lv.color}"/>${i === main ? `
-      <text class="plabel" y="25">${esc(l.short || l.name)}</text>` : ''}</g>`;
+      <circle r="12" fill="transparent"/><circle r="9.5" class="pbg"/><text class="ptx" y="3.7">P</text>
+      <circle cx="7" cy="-7" r="4" class="lvl ${st.reported ? 'rep' : 'est'}" style="--lc:${lv.color}"/>${i === main ? `
+      <text class="plabel" y="22.5">${esc(l.short || l.name)}</text>` : ''}</g>`;
     });
   }
   const act = activeReports();
@@ -1851,7 +1876,8 @@ function panelMe() {
   const c = pr.car;
   h += `<div class="sect"><h2>Where I parked</h2><div class="list">` + (c
     ? `<button class="row" data-act="openCar"><span class="ic car">${I.car}</span><span class="row-main"><span class="row-t">${esc(carPlaceText())}</span><span class="row-s">Saved ${ago(c.at).toLowerCase()}${c.remindAt ? `. Reminder at ${clock(c.remindAt)}` : ''}</span></span>${I.chev}</button>`
-    : `<button class="row" data-act="carPick"><span class="ic car">${I.car}</span><span class="row-main"><span class="row-t">Save where I parked</span><span class="row-s">Get alerts when enforcement is near your car</span></span>${I.chev}</button>`) + `</div></div>`;
+    : `<button class="row" data-act="carPick"><span class="ic car">${I.car}</span><span class="row-main"><span class="row-t">Save where I parked</span><span class="row-s">Get alerts when enforcement is near your car</span></span>${I.chev}</button>`) + `</div>
+    <div class="list" style="margin-top:10px"><button class="row" data-act="toggleAskFull" aria-pressed="${askFullOn()}"><span class="row-main"><span class="row-t">Ask how full the lot was</span><span class="row-s">After you tap I'm parked here in a lot, offer a one-tap update to share. Nothing is sent unless you tap.</span></span><span class="switch ${askFullOn() ? 'on' : ''}"></span></button></div></div>`;
   h += `<div class="sect"><h2>My vehicle</h2><div class="list"><div class="inrow"><label class="field"><input id="vehIn" data-bind="vehicle" aria-label="My vehicle" placeholder="e.g. Toyota Tacoma, gray" value="${esc(pr.vehicle)}" maxlength="60"></label><p class="row-s" style="margin:6px 2px 0">Optional. Only you can see this.</p></div></div></div>`;
   h += `<div class="sect"><h2>My permit</h2><div class="list">${PERMITS.map(([id, label, sub]) =>
     `<button class="row" data-act="permit" data-v="${id}" aria-pressed="${pr.permit === id}"><span class="radio ${pr.permit === id ? 'on' : ''}"></span>
@@ -1884,6 +1910,7 @@ function panelMe() {
 /* sheets */
 function openSheet(sh) {
   S.sheet = sh; S.tab = 'map';
+  S.hallChanging = false; S.hallQ = '';   // the building search starts closed and empty each time
   if (sh.type !== 'newReport') { S.pick = null; S.draft = null; }
   if (sh.type !== 'walk') S.walk = null;
   if (sh.type !== 'zone') S.zoneFocus = null;
@@ -1973,11 +2000,10 @@ function sheetWalk() {
   const w = S.walk, wp = walkPlan();
   let h = sheetHead(w.toCar ? 'Walk to my car' : 'Plan my walk', w.toCar ? 'From where you are' : w.from === 'car' ? 'From your car' : w.fixed && w.lot ? `From ${esc(LOT_BY[w.lot].name)}` : 'Find the best lot for where you\'re headed');
   if (!w.toCar) {
-    const opts = [...PLACES.map(p => [p.id, esc(p.short || p.name)]), ['pt', `${I.pin.replace('<svg', '<svg width="15" height="15"')}Pick on map`]];
-    h += `<div class="field" style="margin-top:0"><span>Where are you headed?</span>${chips('walkDest', opts, S.pick === 'dest' ? 'pt' : (w.dest || ''))}</div>`;
+    h += `<div class="field" style="margin-top:0"><span id="hallLbl">Where are you headed?</span></div>${placePicker('walk')}`;
   }
   if (S.pick === 'dest') return h + `<p class="fine">Tap the map where you're headed.</p>`;
-  if (!wp) return h + `<p class="fine">${w.toCar ? (S.loc ? "You don't seem to be on campus, so there's no walking route to show." : 'Finding your location…') : 'Pick a place, or tap Pick on map, to see your walk.'}</p>`;
+  if (!wp) return h + `<p class="fine">${w.toCar ? (S.loc ? "You don't seem to be on campus, so there's no walking route to show." : 'Finding your location…') : 'Pick a place, or tap Pick on the map, to see your walk.'}</p>`;
   const mins = walkMin(wp.route.d);
   h += `<div class="summary" style="margin-top:14px"><div class="mins">${mins}<small>min walk</small></div><div class="row-main"><span class="row-t">${esc(wp.fromYou ? 'Your location' : wp.fromCar ? 'Your car' : wp.lot.name)} to ${esc(wp.dest.name)}</span><span class="row-s">About ${miles(wp.route.d)} on foot</span></div></div>`;
   if (!wp.fromCar && !wp.fromYou && !w.fixed) {
@@ -1993,11 +2019,40 @@ function sheetWalk() {
   }
   return h;
 }
+/* Search list used by "Plan my trip" (mode 'plan': academic halls) and "Plan my walk" (mode 'walk': landmarks and halls). */
+function hallRows(q, mode) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const hit = h => { const t = (h.name + ' ' + (h.short || '') + ' ' + (h.about || '')).toLowerCase(); return words.every(w => t.includes(w)); };
+  const act = mode === 'walk' ? 'walkDest' : 'planDest';
+  const groups = mode === 'walk' ? [['Landmarks', PLACES], ['Academic halls', HALLS]] : [[null, HALLS]];
+  const row = h => `<button class="hallrow" data-act="${act}" data-v="${h.id}"><span class="row-t">${esc(h.name)}</span>${h.about ? `<span class="row-s">${esc(h.about)}</span>` : ''}</button>`;
+  const out = groups.map(([title, list]) => { const m = list.filter(hit); return m.length ? (title ? `<div class="hallgrp">${title}</div>` : '') + m.map(row).join('') : ''; }).join('');
+  return out || `<p class="fine" style="margin:12px">Nothing matches that. Try a building name or a department.</p>`;
+}
+function placePicker(mode) {
+  let chosen = null;   // { icon, title, about, act, action }
+  if (mode === 'walk') {
+    const w = S.walk;
+    if (S.pick === 'dest') chosen = { icon:I.pin, title:'Pick on the map', act:'cancelPick', action:'Cancel' };
+    else if (w.dest === 'pt') chosen = { icon:I.pin, title:'A spot on the map' };
+    else if (w.dest && PLACE_BY[w.dest]) { const p = PLACE_BY[w.dest]; chosen = { icon: HALL_BY[w.dest] ? I.bldg : I.pin, title:p.name, about:p.about }; }
+  } else {
+    const h = HALL_BY[S.plan.dest];
+    if (h) chosen = { icon:I.bldg, title:h.name, about:h.about };
+  }
+  if (chosen && !S.hallChanging) {
+    return `<button class="hallsel" data-act="${chosen.act || 'hallChange'}" aria-label="${esc(chosen.title)}. ${chosen.action || 'Change'}"><span class="hs-ic">${chosen.icon}</span><span class="row-main"><span class="row-t">${esc(chosen.title)}</span>${chosen.about ? `<span class="row-s">${esc(chosen.about)}</span>` : ''}</span><span class="hs-chg">${chosen.action || 'Change'}</span></button>`;
+  }
+  return `<input class="hallq" type="search" data-bind="hallQ" data-mode="${mode}" placeholder="${mode === 'walk' ? 'Search buildings or departments' : 'Search halls or departments'}" autocomplete="off" aria-labelledby="hallLbl" value="${esc(S.hallQ || '')}">
+    ${mode === 'walk' ? `<button class="hallpin" data-act="walkDest" data-v="pt">${I.pin.replace('<svg', '<svg width="16" height="16"')}Pick on the map</button>` : ''}
+    <div class="halllist" id="hallList" role="group" aria-label="${mode === 'walk' ? 'Landmarks and academic halls' : 'Academic halls'}">${hallRows(S.hallQ || '', mode)}</div>
+    <p class="fine" style="margin:8px 0 0">Academic halls: names and what they house come from the university's catalog, and positions from OpenStreetMap. Departments sometimes move.</p>`;
+}
 function sheetPlan() {
   const p = S.plan, r = p.dest ? planResult() : null;
   const hh = String(Math.floor(p.minutes / 60)).padStart(2, '0') + ':' + String(p.minutes % 60).padStart(2, '0');
   let h = sheetHead('Plan my trip', 'When to leave, and where to park');
-  h += `<div class="field" style="margin-top:0"><span>Where is your class?</span><div class="chiprow">${PLACES.map(pl => `<button class="chip" data-act="planDest" data-v="${pl.id}" aria-pressed="${p.dest === pl.id}">${esc(pl.short || pl.name)}</button>`).join('')}</div></div>`;
+  h += `<div class="field" style="margin-top:0"><span id="hallLbl">Where is your class?</span></div>${placePicker('plan')}`;
   h += `<div class="pl-row"><label class="field"><span>Class starts at</span><input class="pl-time" type="time" data-bind="planTime" value="${hh}"></label>
     <div class="field"><span>Drive to campus</span><div class="stepper"><button data-act="planDrive" data-v="-5" aria-label="Less drive time">−</button><b>${p.drive ? p.drive + ' min' : 'None'}</b><button data-act="planDrive" data-v="5" aria-label="More drive time">+</button></div></div></div>`;
   h += `<div class="dayrow">${[[0, 'Next'], [2, 'Mon'], [3, 'Tue'], [4, 'Wed'], [5, 'Thu'], [6, 'Fri']].map(([v, t]) => `<button class="chip" data-act="planDay" data-v="${v}" aria-pressed="${p.day === v}">${t}</button>`).join('')}</div>`;
@@ -2040,6 +2095,8 @@ function sheetCar() {
   if (!c) return sheetHead('Where I parked', '') + `<button class="btn navy full" data-act="carHere">${I.loc.replace('<svg', '<svg width="18" height="18"')}Use my current location</button><button class="btn line full" style="margin-top:10px" data-act="carPick">Pick on the map</button>`;
   const near = activeReports().filter(r => r.kind === 'enforcement' && dist(c, r) / U_PER_MI <= S.profile.radius);
   let h = sheetHead(esc(carPlaceText()), `Saved ${ago(c.at).toLowerCase()}, at ${clock(c.at)}`, `<span class="ic car">${I.car}</span>`);
+  const fl = fullQuestionLot();
+  if (fl && fl.id === c.lot) h += fullPrompt(fl);
   if (S.profile.vehicle) h += `<div class="detail" style="margin-top:0"><span class="tag">${esc(S.profile.vehicle)}</span></div>`;
   if (c.acc != null) h += `<p class="row-s" style="margin:${S.profile.vehicle ? 10 : 0}px 0 12px">Pinned to your device's location, accurate to about ${Math.round(c.acc)} m. GPS can be off by more next to tall buildings or inside a garage.</p>`;
   const dc = distToCar();
@@ -2139,6 +2196,18 @@ const locOnCampus = () => !!(S.loc && onCampusPx(S.loc.x, S.loc.y));
    CAR_GOOD_M; after CAR_WAIT_MS it saves the best one it got (up to CAR_FLOOR_M) and says so, or sends you to the map. */
 const LOT_DETECT_M = 30, CAR_GOOD_M = 15, CAR_FLOOR_M = 50, CAR_WAIT_MS = 8000, PARK_QUIET_MS = 3 * 3600000;
 const M_PER_PX = 1609.344 / U_PER_MI;
+/* "How full was it?" right after "I'm parked here". Parking is the moment you know how full a lot was, so one tap here turns every
+   arrival into a report. Nothing is sent unless the person taps a level. Kept in this browser only (pr.askFull). */
+const FULL_QUIET_MS = 10 * 60000, FULL_WINDOW_MS = 15 * 60000;   // skip if someone just reported it; stop offering after 15 minutes
+const askFullOn = () => lsGet('pr.askFull', true) !== false;
+const setAskFull = on => { try { if (on) localStorage.removeItem('pr.askFull'); else localStorage.setItem('pr.askFull', 'false'); } catch {} };
+const fullQuestionLot = () => { const a = S.fullAsk; return a && Date.now() - a.at < FULL_WINDOW_MS ? LOT_BY[a.lot] : null; };
+function fullPrompt(l) {
+  return `<div class="fullq" role="group" aria-labelledby="fullqT"><div class="row-t" id="fullqT">How full was ${esc(l.name)} when you arrived?</div>
+    <p class="row-s" style="margin:4px 0 10px">One tap shares it with other students. Your name is never attached.</p>
+    <div class="levels">${Object.entries(LEVELS).map(([k, v]) => `<button data-act="fullAnswer" data-v="${k}" style="--lc:${v.color}" aria-label="Mark ${esc(l.name)} as ${v.label}"><i></i>${v.short}</button>`).join('')}</div>
+    <div class="fullq-links"><button data-act="fullSkip">Not now</button><button data-act="fullNever">Don't ask me this</button></div></div>`;
+}
 function lotUnderMe() {   // the lot you are standing in, if your device has a close reading from this visit
   const l = S.loc;
   if (!l || l.stale || !(l.acc <= LOT_DETECT_M)) return null;
@@ -2285,6 +2354,11 @@ function setCar(x, y, o = {}) {   // o.acc: the GPS reading's accuracy in meters
   const car = { v:MAP_V, x, y, lot: lot || null, at: Date.now(), remindAt: null, remindMins: 0 };
   if (o.acc != null) car.acc = Math.round(o.acc);
   S.profile.car = car;
+  S.fullAsk = null;
+  if (o.acc != null && car.lot && askFullOn()) {   // only when the spot came from your device's location, so you are actually there
+    const d = S.lots[car.lot];
+    if (!(d && Date.now() - d.at < FULL_QUIET_MS)) S.fullAsk = { lot: car.lot, at: Date.now() };
+  }
   S.pick = null; saveProfile();
   toast(o.acc == null ? 'Spot saved. We\'ll flag enforcement near your car.'
     : o.acc <= CAR_GOOD_M ? 'Pinned to your exact spot. We\'ll flag enforcement near your car.'
@@ -2356,11 +2430,12 @@ document.addEventListener('click', async e => {
       if (u && u.id === l.id) { saveCarHere(); break; }   // standing in it: use your real spot, not the middle of the lot
       const c = center(l); setCar(c.x, c.y, { lot: l.id }); break;
     }
-    case 'walkFrom': S.walk = { from:null, lot:id, fixed:true, dest:null }; openSheet({ type:'walk' }); break;
-    case 'planWalk': S.walk = { from:null, lot:null, dest:null }; openSheet({ type:'walk' }); break;
-    case 'carWalk': S.walk = { from:'car', dest:null }; openSheet({ type:'walk' }); break;
+    case 'walkFrom': S.walk = { from:null, lot:id, fixed:true, dest:null }; S.hallChanging = false; S.hallQ = ''; openSheet({ type:'walk' }); break;
+    case 'planWalk': S.walk = { from:null, lot:null, dest:null }; S.hallChanging = false; S.hallQ = ''; openSheet({ type:'walk' }); break;
+    case 'carWalk': S.walk = { from:'car', dest:null }; S.hallChanging = false; S.hallQ = ''; openSheet({ type:'walk' }); break;
     case 'walkAll': S.walk.lot = null; S.walk.fixed = false; renderSheet(); renderMapDyn(); fitWalk(); break;
     case 'walkDest':
+      S.hallChanging = false; S.hallQ = '';
       if (v === 'pt') { S.pick = 'dest'; renderSheet(); renderMapUI(); break; }
       S.pick = null; S.walk.dest = v; renderSheet(); renderMapDyn(); renderMapUI(); fitWalk(); break;
     case 'walkPick': S.walk.lot = id; renderSheet(); renderMapDyn(); fitWalk(); { const s = $('#sheet'); s.scrollTop = 0; } break;
@@ -2368,8 +2443,9 @@ document.addEventListener('click', async e => {
     case 'consentYes': setConsent(true); break;
     case 'consentNo': setConsent(false); break;
     case 'consentOpen': S.consentOpen = true; renderConsent(); break;
-    case 'planTrip': S.planPicked = null; openSheet({ type:'plan' }); fitPlan(); refreshHistory(); break;
-    case 'planDest': S.plan.dest = v; S.planPicked = null; savePlan(); renderSheet(); renderMapDyn(); fitPlan(); break;
+    case 'planTrip': S.planPicked = null; S.hallChanging = false; S.hallQ = ''; openSheet({ type:'plan' }); fitPlan(); refreshHistory(); break;
+    case 'planDest': S.plan.dest = v; S.hallChanging = false; S.hallQ = ''; S.planPicked = null; savePlan(); renderSheet(); renderMapDyn(); fitPlan(); break;
+    case 'hallChange': S.hallChanging = true; S.hallQ = ''; renderSheet(); requestAnimationFrame(() => { const i = $('.hallq'); if (i) i.focus(); }); break;
     case 'planDay': S.plan.day = Number(v); savePlan(); renderSheet(); renderMapDyn(); break;
     case 'planDrive': S.plan.drive = clamp(S.plan.drive + Number(v), 0, 90); savePlan(); renderSheet(); break;
     case 'planPick': S.planPicked = id; renderSheet(); renderMapDyn(); fitPlan(); break;
@@ -2385,7 +2461,15 @@ document.addEventListener('click', async e => {
     case 'walkToCar': walkToCar(); break;
     case 'rHere': if (locOnCampus()) { S.draft.x = S.loc.x; S.draft.y = S.loc.y; renderPins(); const el = $('#draftLoc'); if (el) el.textContent = describe(S.loc.x, S.loc.y).text; } break;
     case 'cancelPick': S.pick = null; render(); break;
-    case 'carRemove': S.profile.car = null; saveProfile(); closeSheet(); toast('Saved spot removed.'); break;
+    case 'fullAnswer': {
+      const l = fullQuestionLot(); if (!l) break;
+      if (await setLotLevel(l.id, v)) { S.fullAsk = null; toast(`Thanks. ${l.name} marked as ${LEVELS[v].label.toLowerCase()}.`); renderSheet(); }
+      break;
+    }
+    case 'fullSkip': S.fullAsk = null; renderSheet(); break;
+    case 'fullNever': S.fullAsk = null; setAskFull(false); toast('Okay. You can turn this back on in the Me tab.'); renderSheet(); break;
+    case 'toggleAskFull': setAskFull(!askFullOn()); renderPanel(); break;
+    case 'carRemove': S.fullAsk = null; S.profile.car = null; saveProfile(); closeSheet(); toast('Saved spot removed.'); break;
     case 'carRemind': {
       const c = S.profile.car; if (!c) break;
       const m = Number(v); c.remindMins = m; c.remindAt = m ? Date.now() + m * MIN : null; c.warned = false; c.doneAlert = false;
@@ -2457,6 +2541,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.dataset.draft && S.draft) S.draft[t.dataset.draft] = t.value;
   if (t.dataset.bind === 'vehicle') { S.profile.vehicle = t.value; }
+  if (t.dataset.bind === 'hallQ') { S.hallQ = t.value; const l = $('#hallList'); if (l) l.innerHTML = hallRows(S.hallQ, t.dataset.mode); }
 });
 document.addEventListener('change', e => {
   if (e.target.dataset.bind === 'vehicle') { S.profile.vehicle = e.target.value.trim(); saveProfile(); }
