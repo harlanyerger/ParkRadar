@@ -1,10 +1,10 @@
 # ParkRadar
 
-Know before you park. A campus parking app with enforcement reports, lot availability, zone rules and walking directions on the Ole Miss parking map.
+Know before you park. A campus parking app with enforcement reports, lot availability, zone rules and walking directions on Mapbox street and satellite maps.
 
 ## Files
 
-- `index.html` is the whole app, with the campus map image built in. It also shows Mapbox street and satellite maps; the layers button under the zoom buttons switches between Streets, Satellite and the Ole Miss parking map.
+- `index.html` is the whole app. It shows Mapbox street and satellite maps (the layers button under the zoom buttons switches between them), but only after the visitor taps Allow on the consent banner. Without that, the lots are drawn on a plain background.
 - `manifest.webmanifest` and the icons let people add it to their home screen.
 
 ## Running it
