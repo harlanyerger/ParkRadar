@@ -519,6 +519,15 @@ button.row:hover{background:var(--surface-2)}
 .ob-permit .radio.on{border-color:#fff}
 .ob-permit .radio.on::after{background:#fff}
 .ob .field span{color:rgba(255,255,255,.75)}
+.ob-btns{display:grid;gap:10px}
+.ob .btn.obsec{background:transparent;border:1.5px solid rgba(255,255,255,.6);color:#fff}
+.ob .btn.obsec:hover{background:rgba(255,255,255,.08)}
+.ob .acct-links button{color:#fff;text-decoration:underline}
+.ob .acct-err{color:#FFB3BB}
+.ob .acct-note{color:#fff}
+.ob .row-s{color:rgba(255,255,255,.72)}
+.ob a{color:#fff}
+.acct-note{margin:10px 0 0;font-size:13.5px;font-weight:650;color:var(--ink)}
 .ob .field input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
 .ob .field input::placeholder{color:rgba(255,255,255,.65)}
 .ob .back{align-self:flex-start;color:rgba(255,255,255,.8);font-weight:650;font-size:14px;padding:6px 0}
@@ -1006,31 +1015,33 @@ function acctMessage(e) {   // a wrong email and a wrong password share one mess
   if (c === 'auth/requires-recent-login') return 'For your safety, log out, log in again, and then try this.';
   return `That didn't work. Try again.${c ? ` (Firebase said: ${c})` : ''}`;
 }
-const acctOpen = mode => { S.acct = { mode, email:(S.acct && S.acct.email) || '', pw:'', msg:'', note:'', busy:false }; renderPanel(); requestAnimationFrame(() => { const i = $('#acctEmail') || $('#acctPw'); if (i) i.focus(); }); };
+const acctOnboarding = () => !S.profile.onboarded && S.obStep === 2;
+const acctRender = () => { if (acctOnboarding()) renderOnboard(); else renderPanel(); };
+const acctOpen = mode => { S.acct = { mode, email:(S.acct && S.acct.email) || '', pw:'', msg:'', note:'', busy:false }; acctRender(); requestAnimationFrame(() => { const i = $('#acctEmail') || $('#acctPw'); if (i) i.focus(); }); };
 async function acctSubmit() {
   const a = S.acct; if (!a || a.busy) return;
   a.msg = ''; a.note = '';
   const problem = a.mode === 'delete' ? (a.pw ? '' : 'Enter your password.') : acctProblem(a.email, a.pw, a.mode !== 'reset');
-  if (problem) { a.msg = problem; renderPanel(); return; }
-  if (!S.db) { a.msg = "ParkRadar isn't connected right now. Try again when you're online."; renderPanel(); return; }
+  if (problem) { a.msg = problem; acctRender(); return; }
+  if (!S.db) { a.msg = "ParkRadar isn't connected right now. Try again when you're online."; acctRender(); return; }
   const { auth, authMod } = S.db, email = a.email.trim();
-  a.busy = true; renderPanel();
+  a.busy = true; acctRender();
   try {
     if (a.mode === 'create') {
       await authMod.linkWithCredential(auth.currentUser, authMod.EmailAuthProvider.credential(email, a.pw));
-      S.acct = null; await saveProfile(); toast("Account created. You're signed in."); render();
+      S.acct = null; if (!S.profile.onboarded) S.obStep = 1; await saveProfile(); toast("Account created. You're signed in."); render();
     } else if (a.mode === 'login') {
       await authMod.signInWithEmailAndPassword(auth, email, a.pw);
       location.reload();                                  // starts again as that account; its saved settings replace the ones here
     } else if (a.mode === 'reset') {
       await authMod.sendPasswordResetEmail(auth, email);
-      a.busy = false; a.note = 'If that email has an account, a reset link is on its way.'; renderPanel();
+      a.busy = false; a.note = 'If that email has an account, a reset link is on its way.'; acctRender();
     } else if (a.mode === 'delete') {
       const u = auth.currentUser;
       await authMod.reauthenticateWithCredential(u, authMod.EmailAuthProvider.credential(u.email, a.pw));
       a.busy = false; S.acct = null; await deleteMyData(true);
     }
-  } catch (e) { a.busy = false; a.msg = a.mode === 'delete' && /wrong-password|invalid-credential|invalid-login/.test((e && e.code) || '') ? "That password isn't right." : acctMessage(e); renderPanel(); }
+  } catch (e) { a.busy = false; a.msg = a.mode === 'delete' && /wrong-password|invalid-credential|invalid-login/.test((e && e.code) || '') ? "That password isn't right." : acctMessage(e); acctRender(); }
 }
 async function acctLogOut() {
   if (!S.db || !confirm('Log out?\n\nThis browser will forget your settings and saved car. They stay in your account, and come back when you log in.')) return;
@@ -1039,20 +1050,21 @@ async function acctLogOut() {
   location.reload();
 }
 function acctForm() {
+  const ob = acctOnboarding();
   const a = S.acct, m = a.mode, field = (id, type, label, val, ac, extra = '') => `<label class="field"><span>${label}</span><input id="${id}" type="${type}" data-bind="${id}" value="${esc(val)}" autocomplete="${ac}" ${extra}></label>`;
   const title = { create:'Create an account', login:'Log in', reset:'Reset your password', delete:'Delete your data' }[m];
   const blurb = { create:'Your reports, settings and saved car stay with you. We use your email only for your account and to send a password reset when you ask.',
     login:"This browser will use your account's settings. Reports you posted before logging in stay under your old anonymous ID.",
     reset:'Enter your email and we will send a reset link.',
     delete:'This removes your reports, your "how full" updates, your settings and saved car, and your account, including your email address, and clears what ParkRadar saved in this browser. Enter your password to confirm. It cannot be undone.' }[m];
-  let h = `<form class="acctform" data-form="acct" novalidate><div class="row-t" style="font-size:17px" id="acctT">${title}</div><p class="row-s" style="margin:4px 0 0">${blurb}</p>`;
+  let h = `<form class="acctform" data-form="acct" novalidate>${ob ? `<h2 id="acctT">${title}</h2><p class="sub">${blurb}</p>` : `<div class="row-t" style="font-size:17px" id="acctT">${title}</div><p class="row-s" style="margin:4px 0 0">${blurb}</p>`}`;
   if (m !== 'delete') h += field('acctEmail', 'email', 'Email', a.email, 'email', 'inputmode="email" autocapitalize="none" spellcheck="false"');
   if (m !== 'reset') h += field('acctPw', 'password', m === 'create' ? `Password (at least ${MIN_PW} characters)` : 'Password', a.pw, m === 'login' || m === 'delete' ? 'current-password' : 'new-password');
-  if (m === 'create') h += `<p class="row-s" style="margin:10px 0 0">By creating an account you confirm you are 13 or older and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>`;
+  if (m === 'create') h += `<p class="row-s" style="margin:10px 0 0">By creating an account you confirm you are 15 or older and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>`;
   if (a.msg) h += `<p class="acct-err" role="alert">${esc(a.msg)}</p>`;
-  if (a.note) h += `<p class="row-s" role="status" style="margin:10px 0 0;color:var(--ink);font-weight:650">${esc(a.note)}</p>`;
-  h += `<button class="btn ${m === 'delete' ? 'red' : 'navy'} full" type="submit" style="margin-top:12px" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Working\u2026' : { create:'Create account', login:'Log in', reset:'Send reset link', delete:'Delete everything' }[m]}</button>
-    <div class="acct-links">${m === 'create' ? `<button type="button" data-act="acctOpen" data-v="login">I already have an account</button>` : ''}${m === 'login' ? `<button type="button" data-act="acctOpen" data-v="create">Create an account instead</button><button type="button" data-act="acctOpen" data-v="reset">Forgot password?</button>` : ''}${m === 'reset' ? `<button type="button" data-act="acctOpen" data-v="login">Back to log in</button>` : ''}<button type="button" data-act="acctCancel">Cancel</button></div></form>`;
+  if (a.note) h += `<p class="acct-note" role="status">${esc(a.note)}</p>`;
+  h += `<button class="btn ${m === 'delete' || ob ? 'red' : 'navy'}${ob ? ' big' : ''} full" type="submit" style="margin-top:12px" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Working\u2026' : { create:'Create account', login:'Log in', reset:'Send reset link', delete:'Delete everything' }[m]}</button>
+    <div class="acct-links">${m === 'create' ? `<button type="button" data-act="acctOpen" data-v="login">I already have an account</button>` : ''}${m === 'login' ? `<button type="button" data-act="acctOpen" data-v="create">Create an account instead</button><button type="button" data-act="acctOpen" data-v="reset">Forgot password?</button>` : ''}${m === 'reset' ? `<button type="button" data-act="acctOpen" data-v="login">Back to log in</button>` : ''}${ob ? '' : `<button type="button" data-act="acctCancel">Cancel</button>`}</div>${ob ? `<button type="button" class="btn obsec full" style="margin-top:12px" data-act="obNext">Continue without an account</button>` : ''}</form>`;
   return h;
 }
 function acctSection() {
@@ -1347,6 +1359,7 @@ async function initRuntime() {
     if (snap.exists()) { S.profile = { ...DEFAULT_PROFILE, ...snap.data() }; sanitizeProfile(); lsSet('pr.profile', S.profile); }
     else if (S.profile.onboarded) saveProfile();
   } catch (e) { console.warn('ParkRadar: could not load saved settings', e); }
+  if (acctUser() && !S.profile.onboarded) S.obStep = 1;   // signed in to an account that has no settings yet: go straight to the permit question
   render();
   refreshHistory(true);
 }
@@ -2305,9 +2318,12 @@ function renderOnboard() {
       <p class="ob-tag">Know before you park.</p>
       <p class="ob-copy">See where students just spotted parking enforcement, which lots still have room, and where your permit works.</p>
       <div class="ob-fill"></div>
-      <button class="btn red big full" data-act="obNext">Get started</button>
-      <p class="ob-foot ob-legal">By continuing, you confirm you are 13 or older and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+      ${acctUser() ? `<p class="ob-foot" style="margin:0 0 10px">Signed in as ${esc(acctUser().email)}</p><button class="btn red big full" data-act="obNext">Get started</button>` : `<p class="ob-foot" style="margin:0 0 12px">An account is optional. It keeps your settings and saved car if you switch phones.</p>
+      <div class="ob-btns"><button class="btn red big full" data-act="obAcct" data-v="create">Create an account</button><button class="btn obsec big full" data-act="obAcct" data-v="login">Log in</button><button class="btn obsec big full" data-act="obNext">Continue without an account</button></div>`}
+      <p class="ob-foot ob-legal">By continuing, you confirm you are 15 or older and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
       <p class="ob-foot" style="margin-top:8px">Built by students, for students.</p></div>`;
+  } else if (S.obStep === 2 && S.acct) {
+    el.innerHTML = `<div class="ob"><button class="back" data-act="obBack">Back</button>${acctForm()}</div>`;
   } else {
     const hi = S.me.name ? `Hi ${esc(S.me.name.split(' ')[0])}. ` : '';
     el.innerHTML = `<div class="ob"><button class="back" data-act="obBack">Back</button>
@@ -2665,8 +2681,9 @@ document.addEventListener('click', async e => {
     case 'reset':
       if (confirm('Reset your permit, vehicle and saved car?')) { S.profile = { ...DEFAULT_PROFILE }; saveProfile(); S.obStep = 0; S.tab = 'map'; render(); }
       break;
-    case 'obNext': S.obStep = 1; renderOnboard(); break;
-    case 'obBack': S.obStep = 0; renderOnboard(); break;
+    case 'obNext': S.obStep = 1; S.acct = null; renderOnboard(); break;
+    case 'obAcct': S.obStep = 2; acctOpen(v); break;
+    case 'obBack': S.obStep = 0; S.acct = null; renderOnboard(); break;
     case 'obDone': S.profile.onboarded = true; saveProfile(); render(); requestAnimationFrame(() => fitStart(false)); if (installTip()) setTimeout(() => toast('Tip: tap Share, then Add to Home Screen to install ParkRadar.'), 900); break;
     case 'installTipX': lsSet('pr.installTipX', true); render(); break;
     case 'bannerX': $('#banner').hidden = true; break;
