@@ -309,6 +309,12 @@ main{position:relative;flex:1;min-height:0}
 .btn.full{width:100%}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .btn.big{height:54px;font-size:16px;border-radius:16px}
+.acct-err{margin:10px 0 0;font-size:13.5px;font-weight:650;color:var(--a-full-t)}
+.acct-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acct-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px}
+.acct-links button{font-size:13.5px;font-weight:650;color:var(--link);min-height:32px;padding:4px 0}
+.acctform .field input{margin-top:0}
+.plusbadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--navy);color:var(--on-navy);font-size:11px;font-weight:800;letter-spacing:.03em;vertical-align:1px}
 .fullq{background:var(--surface-2);border-radius:14px;padding:14px;margin-bottom:14px}
 .fullq-links{display:flex;justify-content:space-between;margin-top:10px}
 .fullq-links button{font-size:13.5px;font-weight:650;color:var(--link);padding:6px 0;min-height:32px}
@@ -974,11 +980,94 @@ const olColor = c => c >= .8 ? 'var(--a-plenty)' : c >= .6 ? 'var(--a-some)' : c
 const olColorT = c => c >= .8 ? 'var(--a-plenty-t)' : c >= .6 ? 'var(--a-some-t)' : c >= .35 ? 'var(--a-few-t)' : 'var(--a-full-t)';   // fill behind text
 
 // Every "how full is it?" report is kept (here and in the shared `history` collection) so predictions can learn.
+/* ---------------- optional account (email and password) ----------------
+   Without one the site uses an anonymous ID in this browser. Creating an account upgrades that same ID, so what you posted and
+   saved stays with it. Logging in switches this browser to an account made earlier; logging out goes back to a new anonymous ID. */
+const MIN_PW = 8;
+const acctUser = () => (S.db && S.db.auth && S.db.auth.currentUser && S.db.auth.currentUser.email) ? S.db.auth.currentUser : null;
+function acctProblem(email, pw, needPw = true) {
+  const e = (email || '').trim();
+  if (!e || !e.includes('@') || !e.includes('.') || /\s/.test(e)) return 'Enter your email address.';
+  if (needPw && (pw || '').length < MIN_PW) return `Use a password with at least ${MIN_PW} characters.`;
+  return '';
+}
+function acctMessage(e) {   // a wrong email and a wrong password share one message, so it never confirms whether an address has an account
+  const c = (e && e.code) || '';
+  if (c === 'auth/email-already-in-use' || c === 'auth/credential-already-in-use') return 'That email already has an account. Log in instead.';
+  if (c === 'auth/invalid-email' || c === 'auth/missing-email') return 'Enter your email address.';
+  if (c === 'auth/weak-password') return `Use a password with at least ${MIN_PW} characters.`;
+  if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-login-credentials', 'auth/missing-password'].includes(c)) return "That email and password don't match an account.";
+  if (c === 'auth/too-many-requests') return 'Too many tries. Wait a few minutes and try again.';
+  if (c === 'auth/user-disabled') return 'This account has been turned off. Email us (see the Privacy Policy).';
+  if (c === 'auth/operation-not-allowed' || c === 'auth/admin-restricted-operation') return `Accounts aren't switched on yet. Please try again later. (Firebase said: ${c})`;
+  if (c === 'auth/network-request-failed') return "Couldn't reach ParkRadar. Check your connection and try again.";
+  if (c === 'auth/requires-recent-login') return 'For your safety, log out, log in again, and then try this.';
+  return `That didn't work. Try again.${c ? ` (Firebase said: ${c})` : ''}`;
+}
+const acctOpen = mode => { S.acct = { mode, email:(S.acct && S.acct.email) || '', pw:'', msg:'', note:'', busy:false }; renderPanel(); requestAnimationFrame(() => { const i = $('#acctEmail') || $('#acctPw'); if (i) i.focus(); }); };
+async function acctSubmit() {
+  const a = S.acct; if (!a || a.busy) return;
+  a.msg = ''; a.note = '';
+  const problem = a.mode === 'delete' ? (a.pw ? '' : 'Enter your password.') : acctProblem(a.email, a.pw, a.mode !== 'reset');
+  if (problem) { a.msg = problem; renderPanel(); return; }
+  if (!S.db) { a.msg = "ParkRadar isn't connected right now. Try again when you're online."; renderPanel(); return; }
+  const { auth, authMod } = S.db, email = a.email.trim();
+  a.busy = true; renderPanel();
+  try {
+    if (a.mode === 'create') {
+      await authMod.linkWithCredential(auth.currentUser, authMod.EmailAuthProvider.credential(email, a.pw));
+      S.acct = null; await saveProfile(); toast("Account created. You're signed in."); render();
+    } else if (a.mode === 'login') {
+      await authMod.signInWithEmailAndPassword(auth, email, a.pw);
+      location.reload();                                  // starts again as that account; its saved settings replace the ones here
+    } else if (a.mode === 'reset') {
+      await authMod.sendPasswordResetEmail(auth, email);
+      a.busy = false; a.note = 'If that email has an account, a reset link is on its way.'; renderPanel();
+    } else if (a.mode === 'delete') {
+      const u = auth.currentUser;
+      await authMod.reauthenticateWithCredential(u, authMod.EmailAuthProvider.credential(u.email, a.pw));
+      a.busy = false; S.acct = null; await deleteMyData(true);
+    }
+  } catch (e) { a.busy = false; a.msg = a.mode === 'delete' && /wrong-password|invalid-credential|invalid-login/.test((e && e.code) || '') ? "That password isn't right." : acctMessage(e); renderPanel(); }
+}
+async function acctLogOut() {
+  if (!S.db || !confirm('Log out?\n\nThis browser will forget your settings and saved car. They stay in your account, and come back when you log in.')) return;
+  try { await S.db.authMod.signOut(S.db.auth); } catch { toast("Couldn't log out. Try again."); return; }
+  try { for (const k of Object.keys(localStorage)) if (k.startsWith('pr.') && k !== 'pr.consent' && k !== 'pr.mapMode') localStorage.removeItem(k); } catch {}
+  location.reload();
+}
+function acctForm() {
+  const a = S.acct, m = a.mode, field = (id, type, label, val, ac, extra = '') => `<label class="field"><span>${label}</span><input id="${id}" type="${type}" data-bind="${id}" value="${esc(val)}" autocomplete="${ac}" ${extra}></label>`;
+  const title = { create:'Create an account', login:'Log in', reset:'Reset your password', delete:'Delete your data' }[m];
+  const blurb = { create:'Your reports, settings and saved car stay with you. We use your email only for your account and to send a password reset when you ask.',
+    login:"This browser will use your account's settings. Reports you posted before logging in stay under your old anonymous ID.",
+    reset:'Enter your email and we will send a reset link.',
+    delete:'This removes your reports, your "how full" updates, your settings and saved car, and your account, including your email address, and clears what ParkRadar saved in this browser. Enter your password to confirm. It cannot be undone.' }[m];
+  let h = `<form class="acctform" data-form="acct" novalidate><div class="row-t" style="font-size:17px" id="acctT">${title}</div><p class="row-s" style="margin:4px 0 0">${blurb}</p>`;
+  if (m !== 'delete') h += field('acctEmail', 'email', 'Email', a.email, 'email', 'inputmode="email" autocapitalize="none" spellcheck="false"');
+  if (m !== 'reset') h += field('acctPw', 'password', m === 'create' ? `Password (at least ${MIN_PW} characters)` : 'Password', a.pw, m === 'login' || m === 'delete' ? 'current-password' : 'new-password');
+  if (m === 'create') h += `<p class="row-s" style="margin:10px 0 0">By creating an account you confirm you are 13 or older and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>`;
+  if (a.msg) h += `<p class="acct-err" role="alert">${esc(a.msg)}</p>`;
+  if (a.note) h += `<p class="row-s" role="status" style="margin:10px 0 0;color:var(--ink);font-weight:650">${esc(a.note)}</p>`;
+  h += `<button class="btn ${m === 'delete' ? 'red' : 'navy'} full" type="submit" style="margin-top:12px" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Working\u2026' : { create:'Create account', login:'Log in', reset:'Send reset link', delete:'Delete everything' }[m]}</button>
+    <div class="acct-links">${m === 'create' ? `<button type="button" data-act="acctOpen" data-v="login">I already have an account</button>` : ''}${m === 'login' ? `<button type="button" data-act="acctOpen" data-v="create">Create an account instead</button><button type="button" data-act="acctOpen" data-v="reset">Forgot password?</button>` : ''}${m === 'reset' ? `<button type="button" data-act="acctOpen" data-v="login">Back to log in</button>` : ''}<button type="button" data-act="acctCancel">Cancel</button></div></form>`;
+  return h;
+}
+function acctSection() {
+  if (!S.db) return '';
+  const u = acctUser();
+  let inner;
+  if (S.acct) inner = `<div class="inrow">${acctForm()}</div>`;
+  else if (u) inner = `<div class="inrow"><div class="row-t">Signed in</div><p class="row-s" style="margin:2px 0 10px">${esc(u.email)}<br>Your settings and saved car are saved to this account.</p><button class="btn line full" data-act="acctLogOut">Log out</button></div>`;
+  else inner = `<div class="inrow"><div class="row-t">Keep your data with you</div><p class="row-s" style="margin:2px 0 10px">Optional. An account keeps your settings and saved car if you switch browsers or phones. Without one, ParkRadar uses an anonymous ID in this browser.</p><div class="acct-btns"><button class="btn navy" data-act="acctOpen" data-v="create">Create account</button><button class="btn line" data-act="acctOpen" data-v="login">Log in</button></div></div>`;
+  return `<div class="sect"><h2>Account</h2><div class="list">${inner}</div></div>`;
+}
+
 /* Deleting your data: removes everything stored under your anonymous account (reports, "how full" updates and history,
    private settings), then the anonymous account itself, then what this browser saved. If any server delete fails, nothing
    local is cleared and the account is kept, so you can try again. */
-async function deleteMyData() {
-  if (!confirm('Delete your data?\n\nThis removes your reports, your "how full" updates, your settings and saved car, and your anonymous account, and clears what ParkRadar saved in this browser. It cannot be undone.')) return;
+async function deleteMyData(confirmed = false) {
+  if (!confirmed && !confirm('Delete your data?\n\nThis removes your reports, your "how full" updates, your settings and saved car, and your anonymous account, and clears what ParkRadar saved in this browser. It cannot be undone.')) return;
   toast('Deleting your data…');
   let failed = 0, removed = 0;
   if (S.db && S.me.id) {
@@ -1308,8 +1397,8 @@ function renderConsent() {
   const on = extOK();
   el.hidden = false;
   el.innerHTML = `<div class="consent-card"><h2 id="consentT">Maps and fonts from other companies</h2>
-    <p>ParkRadar itself uses <b>no cookies</b>. Its street and satellite maps come from Mapbox, and its font comes from Google.</p>
-    <p>If you allow them, those companies can see your IP address, and Mapbox saves an anonymous ID in your browser. If you say no, ParkRadar shows the parking lots on a plain background, without streets or satellite photos, and uses a standard font. <b>Everything else works either way.</b> You can change this any time in the Me tab. <a href="cookies.html" target="_blank" rel="noopener">Cookie policy</a></p>
+    <p>ParkRadar itself uses <b>no cookies</b>. Its street and satellite maps, and the drive times you ask for, come from Mapbox, and its font comes from Google.</p>
+    <p>If you allow them, those companies can see your IP address, and Mapbox saves an anonymous ID in your browser. If you tap Estimate from my location, Mapbox also receives your position for that one answer. If you say no, ParkRadar shows the parking lots on a plain background, without streets or satellite photos, and uses a standard font. <b>Everything else works either way.</b> You can change this any time in the Me tab. <a href="cookies.html" target="_blank" rel="noopener">Cookie policy</a></p>
     <div class="consent-btns"><button class="btn navy" data-act="consentYes"${on ? ' aria-pressed="true"' : ''}>Allow</button><button class="btn ghost" data-act="consentNo"${S.consent && !on ? ' aria-pressed="true"' : ''}>No thanks</button></div></div>`;
 }
 function setConsent(ext) {
@@ -1873,6 +1962,7 @@ function panelMe() {
     <div class="tip"><span class="tip-ic">${I.share}</span><span class="row-main"><span class="row-t">Add ParkRadar to your Home Screen</span><span class="row-s">In Safari, tap the Share button, then Add to Home Screen. ParkRadar then opens full screen, like an app.</span></span><button class="x" data-act="installTipX" aria-label="Dismiss">${I.x}</button></div>` : ''}
     <div class="me-card">${av}<span class="row-main"><span class="row-t" style="font-size:18px">${esc(name)}</span>
       <span class="row-s">${esc(permitLabel())}${pr.vehicle ? ', ' + esc(pr.vehicle) : ''}</span></span></div>`;
+  h += acctSection();
   const c = pr.car;
   h += `<div class="sect"><h2>Where I parked</h2><div class="list">` + (c
     ? `<button class="row" data-act="openCar"><span class="ic car">${I.car}</span><span class="row-main"><span class="row-t">${esc(carPlaceText())}</span><span class="row-s">Saved ${ago(c.at).toLowerCase()}${c.remindAt ? `. Reminder at ${clock(c.remindAt)}` : ''}</span></span>${I.chev}</button>`
@@ -1882,12 +1972,15 @@ function panelMe() {
   h += `<div class="sect"><h2>My permit</h2><div class="list">${PERMITS.map(([id, label, sub]) =>
     `<button class="row" data-act="permit" data-v="${id}" aria-pressed="${pr.permit === id}"><span class="radio ${pr.permit === id ? 'on' : ''}"></span>
       <span class="zs" style="--zc:${id === 'res' && pr.resArea ? RES_AREAS[pr.resArea].color : ZONES[id].color}"></span><span class="row-main"><span class="row-t">${label}</span><span class="row-s">${sub}</span></span></button>`).join('')}${pr.permit === 'res' ? `<div class="inrow">${resAreaPicker()}</div>` : ''}</div></div>`;
+  h += `<div class="sect"><h2>My class schedule</h2><div class="list"><div class="inrow"><div class="row-t">${I.lock || ''}Class schedule <span class="plusbadge">PLUS</span></div>
+    <p class="row-s" style="margin:6px 0 10px">Save your classes and get a reminder when it's time to leave for each one. This is part of ParkRadar+, which is not for sale yet, and the reminders are for the iPhone app, since a website can't send them when it is closed.</p>
+    <button class="btn ${pr.waitlist ? 'quiet' : 'navy'} full" data-act="waitlist">${pr.waitlist ? "You're on the waitlist" : 'Join the waitlist'}</button></div></div></div>`;
   h += `<div class="sect"><h2>Alerts</h2><div class="list">
     <button class="row" data-act="toggleAlerts" aria-pressed="${pr.alertsOn}"><span class="row-main"><span class="row-t">Pop-up alerts</span><span class="row-s">Show new reports near your car while the app is open</span></span><span class="switch ${pr.alertsOn ? 'on' : ''}"></span></button>
     <div class="inrow"><div class="row-t" style="margin-bottom:8px">Alert distance from my car</div>${chips('radius', [[.25, '0.25 mi'], [.5, '0.5 mi'], [1, '1 mi']], pr.radius)}</div>
   </div></div>`;
   h += `<div class="plus"><h2>Park<span>Radar</span>+</h2><p>Ideas for a paid version. Nothing here is promised and nothing is for sale yet.</p><ul>
-    ${['Longer alert windows', 'Your own parking history', 'Hour-by-hour availability charts'].map(f => `<li>${I.check}${f}</li>`).join('')}</ul>
+    ${['Class schedule with daily leave-time reminders (iPhone)', 'Longer alert windows', 'Your own parking history', 'Hour-by-hour availability charts'].map(f => `<li>${I.check}${f}</li>`).join('')}</ul>
     <button class="btn ${pr.waitlist ? 'quiet' : 'red'} full" data-act="waitlist">${pr.waitlist ? "You're on the waitlist" : 'Join the waitlist'}</button>
     <p class="price">Not final. We are thinking about $2.99/month or $19.99/year. The waitlist is not an order.</p></div>`;
   h += `<div class="sect"><h2>How ParkRadar works</h2><div class="about">
@@ -1897,7 +1990,7 @@ function panelMe() {
     <p>${S.mode === 'live' ? 'Reports are live and shared with everyone who has this app open. Your car, permit and settings are private to you.' : 'Right now reports are saved on this device only.'}</p>
   </div></div>`;
   h += `<div class="sect"><h2>Privacy choices</h2><div class="list"><button class="row" data-act="consentOpen"><span class="row-main"><span class="row-t">Maps and fonts from other companies</span><span class="row-s">${extOK() ? 'Allowed: Mapbox maps and Google Fonts. Tap to change.' : S.consent ? 'Not allowed: showing lots on a plain background. Tap to change.' : 'Not chosen yet. Tap to choose.'}</span></span>${I.chev}</button>
-    <button class="row" data-act="deleteData"><span class="row-main"><span class="row-t" style="color:var(--red)">Delete my data</span><span class="row-s">Removes your reports, settings, saved car and anonymous account</span></span></button></div></div>`;
+    <button class="row" data-act="deleteData"><span class="row-main"><span class="row-t" style="color:var(--red)">Delete my data</span><span class="row-s">${acctUser() ? 'Removes your reports, settings, saved car and account, including your email' : 'Removes your reports, settings, saved car and anonymous account'}</span></span></button></div></div>`;
   h += `<div class="sect"><div class="list"><button class="row" data-act="reset"><span class="row-main"><span class="row-t" style="color:var(--red)">Reset my settings</span><span class="row-s">Clears your permit, vehicle and saved car</span></span></button>
     <a class="row" href="privacy.html" target="_blank" rel="noopener"><span class="row-main"><span class="row-t">Privacy policy</span><span class="row-s">What ParkRadar collects and who can see it</span></span>${I.chev}</a>
     <a class="row" href="terms.html" target="_blank" rel="noopener"><span class="row-main"><span class="row-t">Terms of service</span><span class="row-s">The rules for using ParkRadar</span></span>${I.chev}</a>
@@ -2048,6 +2141,43 @@ function placePicker(mode) {
     <div class="halllist" id="hallList" role="group" aria-label="${mode === 'walk' ? 'Landmarks and academic halls' : 'Academic halls'}">${hallRows(S.hallQ || '', mode)}</div>
     <p class="fine" style="margin:8px 0 0">Academic halls: names and what they house come from the university's catalog, and positions from OpenStreetMap. Departments sometimes move.</p>`;
 }
+/* "Estimate from my location": the drive from where you are now to the lot ParkRadar suggests, from Mapbox's driving directions.
+   Only runs when tapped, only after you have allowed Mapbox, and your position is not saved. */
+function departParam(d) {   // typical traffic at that time of day, in Oxford's time zone, for trips a few minutes to a couple of weeks away
+  const ms = d.getTime() - Date.now();
+  if (ms < 120000 || ms > 12 * 86400000) return '';
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone:'America/Chicago', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(d).map(x => [x.type, x.value]));
+  return `&depart_at=${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+function driveCaption() {
+  const r = S.plan.dest ? planResult() : null;
+  if (!r || !r.selected) return 'Pick where your class is first.';
+  if (S.driveNote) return S.driveNote;
+  if (S.driveEstimated === S.plan.drive) return 'Based on your location just now. Traffic changes, so check before you go.';
+  return 'Uses where you are now, to the lot ParkRadar suggests. Your location is sent to Mapbox for this answer and not saved.';
+}
+async function estimateDrive() {
+  if (S.driveBusy) return;
+  const r = S.plan.dest ? planResult() : null, sel = r && r.selected;
+  if (!sel) return;
+  const note = t => { S.driveBusy = false; S.driveNote = t; S.driveEstimated = null; renderSheet(); };
+  if (!extOK()) { S.consentOpen = true; renderConsent(); return note('Drive times come from Mapbox. Tap Allow above, then try again.'); }
+  S.driveBusy = true; S.driveNote = ''; renderSheet();
+  if (!S.loc || S.loc.stale) startLocate();
+  for (let i = 0; i < 50 && (!S.loc || S.loc.stale) && locWatch !== null; i++) await new Promise(r => setTimeout(r, 300));
+  if (!S.loc || S.loc.stale) return note("Couldn't find your location. Allow it in your browser, or set the minutes yourself.");
+  if (locOnCampus()) return note("You're on campus now, so there's no drive from here. Set the minutes yourself, or None if you're walking over.");
+  try {
+    const a = pxToLngLat(S.loc.x, S.loc.y), c = center(sel.lot), b = pxToLngLat(c.x, c.y);
+    const res = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${a[0]},${a[1]};${b[0]},${b[1]}?access_token=${MAPBOX_TOKEN}&overview=false${departParam(new Date(sel.arrive.getTime() - 15 * 60000))}`);
+    const j = await res.json(), rt = res.ok && j.routes && j.routes[0];
+    if (!rt) throw new Error('no route');
+    const mins = Math.max(1, Math.ceil(rt.duration / 60));
+    if (mins > 90) return note(`That's about ${mins} minutes by car. ParkRadar goes up to 90, so set it yourself if that's right.`);
+    S.plan.drive = mins; savePlan(); S.driveBusy = false; S.driveNote = ''; S.driveEstimated = mins;
+    renderSheet(); renderMapDyn();
+  } catch { note("Couldn't get a drive time. Check your connection, or set the minutes yourself."); }
+}
 function sheetPlan() {
   const p = S.plan, r = p.dest ? planResult() : null;
   const hh = String(Math.floor(p.minutes / 60)).padStart(2, '0') + ':' + String(p.minutes % 60).padStart(2, '0');
@@ -2055,6 +2185,7 @@ function sheetPlan() {
   h += `<div class="field" style="margin-top:0"><span id="hallLbl">Where is your class?</span></div>${placePicker('plan')}`;
   h += `<div class="pl-row"><label class="field"><span>Class starts at</span><input class="pl-time" type="time" data-bind="planTime" value="${hh}"></label>
     <div class="field"><span>Drive to campus</span><div class="stepper"><button data-act="planDrive" data-v="-5" aria-label="Less drive time">−</button><b>${p.drive ? p.drive + ' min' : 'None'}</b><button data-act="planDrive" data-v="5" aria-label="More drive time">+</button></div></div></div>`;
+  h += `<button class="btn line full" style="margin-top:10px" data-act="driveEst"${S.driveBusy || !(r && r.selected) ? ' disabled' : ''}>${I.loc.replace('<svg', '<svg width="18" height="18"')}${S.driveBusy ? 'Finding the drive\u2026' : 'Estimate from my location'}</button><p class="fine" style="text-align:left;margin:6px 0 0">${esc(driveCaption())}</p>`;
   h += `<div class="dayrow">${[[0, 'Next'], [2, 'Mon'], [3, 'Tue'], [4, 'Wed'], [5, 'Thu'], [6, 'Fri']].map(([v, t]) => `<button class="chip" data-act="planDay" data-v="${v}" aria-pressed="${p.day === v}">${t}</button>`).join('')}</div>`;
   if (!r || !r.selected) return h + `<p class="fine">Pick where your class is to see when to leave.</p>`;
   const sel = r.selected, late = sel.leave.getTime() < S.now - 60000;
@@ -2439,7 +2570,10 @@ document.addEventListener('click', async e => {
       if (v === 'pt') { S.pick = 'dest'; renderSheet(); renderMapUI(); break; }
       S.pick = null; S.walk.dest = v; renderSheet(); renderMapDyn(); renderMapUI(); fitWalk(); break;
     case 'walkPick': S.walk.lot = id; renderSheet(); renderMapDyn(); fitWalk(); { const s = $('#sheet'); s.scrollTop = 0; } break;
-    case 'deleteData': deleteMyData(); break;
+    case 'deleteData': if (acctUser()) acctOpen('delete'); else deleteMyData(); break;
+    case 'acctOpen': acctOpen(v); break;
+    case 'acctCancel': S.acct = null; renderPanel(); break;
+    case 'acctLogOut': acctLogOut(); break;
     case 'consentYes': setConsent(true); break;
     case 'consentNo': setConsent(false); break;
     case 'consentOpen': S.consentOpen = true; renderConsent(); break;
@@ -2447,7 +2581,8 @@ document.addEventListener('click', async e => {
     case 'planDest': S.plan.dest = v; S.hallChanging = false; S.hallQ = ''; S.planPicked = null; savePlan(); renderSheet(); renderMapDyn(); fitPlan(); break;
     case 'hallChange': S.hallChanging = true; S.hallQ = ''; renderSheet(); requestAnimationFrame(() => { const i = $('.hallq'); if (i) i.focus(); }); break;
     case 'planDay': S.plan.day = Number(v); savePlan(); renderSheet(); renderMapDyn(); break;
-    case 'planDrive': S.plan.drive = clamp(S.plan.drive + Number(v), 0, 90); savePlan(); renderSheet(); break;
+    case 'driveEst': estimateDrive(); break;
+    case 'planDrive': S.driveNote = ''; S.plan.drive = clamp(S.plan.drive + Number(v), 0, 90); savePlan(); renderSheet(); break;
     case 'planPick': S.planPicked = id; renderSheet(); renderMapDyn(); fitPlan(); break;
     case 'planRoute': {
       const r = S.plan.dest && planResult(); if (!r || !r.selected) break;
@@ -2541,8 +2676,11 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.dataset.draft && S.draft) S.draft[t.dataset.draft] = t.value;
   if (t.dataset.bind === 'vehicle') { S.profile.vehicle = t.value; }
+  if (t.dataset.bind === 'acctEmail' && S.acct) S.acct.email = t.value;
+  if (t.dataset.bind === 'acctPw' && S.acct) S.acct.pw = t.value;
   if (t.dataset.bind === 'hallQ') { S.hallQ = t.value; const l = $('#hallList'); if (l) l.innerHTML = hallRows(S.hallQ, t.dataset.mode); }
 });
+document.addEventListener('submit', e => { if (e.target.dataset && e.target.dataset.form === 'acct') { e.preventDefault(); acctSubmit(); } });
 document.addEventListener('change', e => {
   if (e.target.dataset.bind === 'vehicle') { S.profile.vehicle = e.target.value.trim(); saveProfile(); }
   if (e.target.dataset.bind === 'planTime') {
