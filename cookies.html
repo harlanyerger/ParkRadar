@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ParkRadar Cookie Policy</title>
+<meta name="description" content="ParkRadar does not use cookies. Here is what it stores in your browser instead, why, and how to clear it.">
+<script>try{var t=localStorage.getItem("pr.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--bg:#f4f6fa;--surface:#fff;--ink:#0f1b2e;--muted:#56657b;--line:#dce2ea;--navy:#13274a;--red:#d62839;--link:#14407f;--note:#eef3fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#09111e;--surface:#101b2c;--ink:#e8edf5;--muted:#99a7bc;--line:#233249;--link:#8fb3ff;--note:#162337}}
+:root[data-theme="dark"]{--bg:#09111e;--surface:#101b2c;--ink:#e8edf5;--muted:#99a7bc;--line:#233249;--link:#8fb3ff;--note:#162337}
+:root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{background:var(--navy);color:#fff;padding:18px 20px}
+header .in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wm{font-weight:800;font-size:22px;letter-spacing:-.01em;color:#fff;text-decoration:none}
+.wm span{color:#ff4052}
+header a.back{color:#fff;opacity:.85;font-size:14px;text-decoration:none}
+main{max-width:760px;margin:0 auto;padding:28px 20px 56px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:20px;margin:36px 0 8px;line-height:1.3}
+h3{font-size:16px;margin:22px 0 4px}
+p,li{margin:8px 0}
+ul{padding-left:22px}
+.date{color:var(--muted);margin:0 0 22px}
+.short{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:12px;padding:6px 20px 12px}
+.short h2{margin-top:14px}
+a{color:var(--link)}
+table{width:100%;border-collapse:collapse;margin:10px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{background:var(--note);font-weight:700}
+tr:last-child td{border-bottom:0}
+td:first-child{width:38%;word-break:break-word}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--note);padding:1px 5px;border-radius:5px}
+footer{color:var(--muted);font-size:14px;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:560px){th,td{padding:8px 9px;font-size:14px}h1{font-size:26px}td:first-child{width:42%}}
+</style>
+</head>
+<body>
+<header><div class="in"><a class="wm" href="./">Park<span>Radar</span></a><a class="back" href="./">Back to the app</a></div></header>
+<main>
+<h1>Cookie Policy</h1>
+<p class="date">Last updated October 7, 2026. This applies to the ParkRadar website. It goes with the <a href="privacy.html">Privacy Policy</a>.</p>
+
+<section class="short">
+<h2>The short version</h2>
+<ul>
+<li><b>ParkRadar does not use cookies.</b> In our testing, loading and using the website sets no cookies in your browser.</li>
+<li>It does use your browser's <b>local storage</b> and similar storage. That works like a cookie jar that stays on your device. ParkRadar uses it only to keep the app working and to remember your settings.</li>
+<li><b>No advertising, marketing or analytics cookies or trackers</b> of our own. We do not use the storage to follow you around other websites.</li>
+<li><b>You choose whether the map and font companies load.</b> The first time you visit, a banner asks. Until you tap Allow, ParkRadar does not load Mapbox's maps or Google's font, so nothing from them is saved in your browser. Google Firebase, which runs live reports, is needed for ParkRadar to work and loads either way.</li>
+<li>You can clear all of it at any time. Everything still works without it, but ParkRadar will forget you.</li>
+</ul>
+</section>
+
+<h2>What cookies and local storage are</h2>
+<p>A cookie is a small text file that a website puts in your browser, and your browser sends it back to the site on every request. Local storage and IndexedDB are similar browser features. A site saves information in them, and the information stays on your device until it is cleared. Unlike cookies, they are not sent to the website automatically with every request.</p>
+
+<h2>What ParkRadar stores in your browser</h2>
+
+<h3>Stored by ParkRadar</h3>
+<table>
+<tr><th>Stored item</th><th>What it is for</th></tr>
+<tr><td><code>pr.consent</code></td><td>Your answer to the banner (Allow or No thanks) and when you gave it, so the banner does not ask every time.</td></tr>
+<tr><td><code>pr.profile</code></td><td>Your permit, your residential area, your vehicle description, your alert settings, your saved car and any parking-time reminder. A copy is also kept privately in our database, so it can follow your anonymous account.</td></tr>
+<tr><td><code>pr.plan</code></td><td>What you last entered in "Plan my trip": the class building, time, day and drive time.</td></tr>
+<tr><td><code>pr.askFull</code></td><td>Only if you turned off the "How full was the lot?" question that appears after you save your car in a lot. It stays on this browser.</td></tr>
+<tr><td><code>pr.theme</code></td><td>Only if you chose Light or Dark in the Me tab instead of Automatic. It stays on this browser, and the policy pages use it too, so they match.</td></tr>
+<tr><td><code>pr.mapMode</code></td><td>Which map you chose: streets or satellite.</td></tr>
+<tr><td><code>pr.locOn</code></td><td>Whether you switched your location on, so the site can start showing it when you reopen the page. Your actual position is never stored here.</td></tr>
+<tr><td><code>pr.installTipX</code></td><td>That you dismissed the "Add to Home Screen" tip, so it does not keep appearing.</td></tr>
+<tr><td><code>pr.hist</code>, <code>pr.histSince</code></td><td>A copy of recent "how full is it?" reports (lot, level, time), used to predict how busy lots will be, and a note of when the site last checked for new ones.</td></tr>
+<tr><td><code>pr.reports</code>, <code>pr.lots</code></td><td>Reports and lot updates saved on your device. These are only used when the site cannot reach the live database.</td></tr>
+<tr><td><code>pr.localId</code></td><td>A random ID the site makes for your browser. It is used only when the site cannot sign you in, to mark which reports are yours on this device.</td></tr>
+</table>
+
+<h3>Stored by Google Firebase</h3>
+<table>
+<tr><th>Stored item</th><th>What it is for</th></tr>
+<tr><td><code>firebaseLocalStorageDb</code> (IndexedDB)</td><td>Your sign-in, anonymous or, if you created an account, to that account (which then includes your email address). It is how the site recognizes your browser next time, so your private settings and your own reports stay yours. Without an account there is no name or email in it.</td></tr>
+<tr><td><code>firebase-heartbeat-database</code> (IndexedDB)</td><td>A small record that Firebase's code keeps about which version of it is running, which Google uses to run and fix Firebase.</td></tr>
+</table>
+
+<h3>Stored by Mapbox (only if you tap Allow)</h3>
+<table>
+<tr><th>Stored item</th><th>What it is for</th></tr>
+<tr><td><code>mapbox.eventData…</code> (local storage)</td><td>An anonymous random ID and some timestamps that Mapbox's map code keeps, which Mapbox uses with its usage statistics. See the <a href="https://www.mapbox.com/legal/privacy">Mapbox privacy policy</a>.</td></tr>
+<tr><td><code>mapbox-tiles</code> (cache)</td><td>Saved map pieces, so the map loads faster and uses less data.</td></tr>
+</table>
+
+<p>Mapbox's items appear only after you allow them. Firebase's items are part of how live reports work, so they are stored without asking. These services run their own code in your browser, and they can change what they store. For their current practices, see the <a href="https://policies.google.com/privacy">Google privacy policy</a>, <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a> and the <a href="https://www.mapbox.com/legal/privacy">Mapbox privacy policy</a>. The font is loaded from Google Fonts only if you tap Allow, and the site itself is hosted by GitHub Pages. In our testing, neither set a cookie.</p>
+
+<h2>Your choice about maps and fonts</h2>
+<ul>
+<li><b>Allow.</b> The street and satellite maps and the Archivo font load. Those companies can see your IP address, and Mapbox saves the anonymous ID and map cache listed above.</li>
+<li><b>No thanks.</b> ParkRadar shows the parking lots on a plain background, without streets or satellite photos, and uses your browser's standard font. Nothing is loaded from Mapbox or Google Fonts. The rest of ParkRadar works the same, including reports, lots, routes and the trip planner.</li>
+<li><b>Change your mind.</b> Open the Me tab, then "Maps and fonts from other companies". Switching to No thanks removes what Mapbox saved and reloads the page. If you pick Streets or Satellite in the map menu without having allowed them, ParkRadar asks first.</li>
+<li><b>Not asked yet.</b> Until you answer, it behaves as if you said No thanks.</li>
+</ul>
+
+<h2>How long it lasts</h2>
+<p>Everything above stays in your browser until you clear it, or the browser clears it for you. ParkRadar does not set an expiry date. Your saved settings are meant to last, so you do not have to enter them again.</p>
+
+<h2>Your choices</h2>
+<ul>
+<li><b>Clear it.</b> Delete the site's data in your browser's settings. On iPhone, in Safari that is Settings, then Safari, then Advanced, then Website Data (the steps vary by iOS version and browser). If you added ParkRadar to your Home Screen, deleting that icon also deletes its data.</li>
+<li><b>Reset inside the app.</b> "Reset my settings" in the Me tab clears your permit, vehicle and saved car. "Delete my data" goes further: it removes your data from our database and your anonymous account, and clears everything listed above from this browser.</li>
+<li><b>Block it.</b> You can set your browser to block site data. ParkRadar still opens, but it cannot remember your settings or keep you signed in anonymously, so each visit may start fresh.</li>
+<li><b>What clearing does.</b> You will lose your saved settings and car on this browser. Because the anonymous sign-in is stored there too, you may no longer be able to remove reports you posted earlier. See the <a href="privacy.html">Privacy Policy</a>.</li>
+</ul>
+
+<h2>The iPhone app</h2>
+<p>The ParkRadar iPhone app does not use cookies either. It keeps the same kinds of information in the app's own storage on your phone, such as your anonymous sign-in (in the Keychain), your settings, and a saved copy of recent reports. Deleting the app removes that storage, though the Keychain can keep the anonymous sign-in. Mapbox's map code in the app also keeps its own anonymous ID and map cache. The Privacy Policy explains how information is handled.</p>
+
+<h2>Changes to this policy</h2>
+<p>If ParkRadar starts using cookies or other trackers, or changes what it stores, we will update this page and the date at the top before it happens.</p>
+
+<h2>Contact</h2>
+<p>Questions about cookies or browser storage? Email <a href="mailto:parkradar@parkradarapp.com">parkradar@parkradarapp.com</a>.</p>
+
+<footer>ParkRadar is made by Park Radar LLC and is not affiliated with the University of Mississippi. See also the <a href="about.html">About page</a>, <a href="privacy.html">Privacy Policy</a>, <a href="terms.html">Terms of Service</a> and <a href="refunds.html">Refund Policy</a>.</footer>
+</main>
+</body>
+</html>

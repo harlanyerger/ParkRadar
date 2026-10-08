@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>About ParkRadar</title>
+<meta name="description" content="Who runs ParkRadar, how to contact us, how to delete your data, and the licenses and credits for what it is built with.">
+<script>try{var t=localStorage.getItem("pr.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{--bg:#f4f6fa;--surface:#fff;--ink:#0f1b2e;--muted:#56657b;--line:#dce2ea;--navy:#13274a;--red:#d62839;--link:#14407f;--note:#eef3fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#09111e;--surface:#101b2c;--ink:#e8edf5;--muted:#99a7bc;--line:#233249;--link:#8fb3ff;--note:#162337}}
+:root[data-theme="dark"]{--bg:#09111e;--surface:#101b2c;--ink:#e8edf5;--muted:#99a7bc;--line:#233249;--link:#8fb3ff;--note:#162337}
+:root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{background:var(--navy);color:#fff;padding:18px 20px}
+header .in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wm{font-weight:800;font-size:22px;letter-spacing:-.01em;color:#fff;text-decoration:none}
+.wm span{color:#ff6b7a}
+header a.back{color:#fff;opacity:.9;font-size:14px;text-decoration:none}
+main{max-width:760px;margin:0 auto;padding:28px 20px 56px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:20px;margin:36px 0 8px;line-height:1.3}
+p,li{margin:8px 0}
+ul{padding-left:22px}
+.date{color:var(--muted);margin:0 0 22px}
+a{color:var(--link)}
+table{width:100%;border-collapse:collapse;margin:10px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{background:var(--note);font-weight:700}
+tr:last-child td{border-bottom:0}
+dl{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 16px;margin:10px 0}
+dt{font-weight:700;margin-top:10px}
+dd{margin:2px 0 10px}
+footer{color:var(--muted);font-size:14px;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+:focus-visible{outline:3px solid #2f6be0;outline-offset:2px;border-radius:4px}
+@media (max-width:560px){th,td{padding:8px 9px;font-size:14px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<header><div class="in"><a class="wm" href="./">Park<span>Radar</span></a><a class="back" href="./">Back to the app</a></div></header>
+<main>
+<h1>About ParkRadar</h1>
+<p class="date">Last updated October 7, 2026.</p>
+
+<h2>Who runs ParkRadar</h2>
+<dl>
+<dt>Operator</dt><dd>Park Radar LLC</dd>
+<dt>Based in</dt><dd>Oxford, Mississippi, USA</dd>
+<dt>Contact</dt><dd><a href="mailto:parkradar@parkradarapp.com">parkradar@parkradarapp.com</a></dd>
+<dt>What it is</dt><dd>ParkRadar is a free app from an independent startup. It helps people find parking near the University of Mississippi. It is not run by, endorsed by, or affiliated with the university.</dd>
+</dl>
+<p>Email us to ask a question, report a wrong or abusive report, ask for something to be corrected or removed, or make a request about your data.</p>
+
+<h2>Deleting your data</h2>
+<ul>
+<li><b>In the app.</b> Open the Me tab and tap <b>Delete my data</b>. It removes the reports and "how full" updates you posted, the history of those updates, your settings and saved car, and your anonymous account, and then clears what ParkRadar saved on your device.</li>
+<li><b>By email.</b> If that does not work, or you no longer have the app, email us. ParkRadar does not know who you are, so tell us roughly what you posted and when. We will do what we can.</li>
+<li><b>What stays.</b> A "still there" or "it's gone" tap on someone else's report is stored only with an anonymous ID, and it disappears with that report. See the <a href="privacy.html">Privacy Policy</a>.</li>
+</ul>
+
+<h2>Credits and licenses</h2>
+<p>ParkRadar is built with the following. Their licenses and terms apply to those parts.</p>
+<table>
+<tr><th>What</th><th>Used for</th><th>License or terms</th></tr>
+<tr><td>Mapbox GL JS 3.32 (website), Mapbox Maps SDK for iOS 11.31 with Mapbox Common and Core Maps (iPhone app)</td><td>Street and satellite maps</td><td>Mapbox Terms of Service. <a href="https://www.mapbox.com/legal/tos">mapbox.com/legal/tos</a></td></tr>
+<tr><td>Map data</td><td>Streets, buildings and places on the maps</td><td>&copy; Mapbox and &copy; OpenStreetMap contributors, under the Open Database License. <a href="https://www.openstreetmap.org/copyright">openstreetmap.org/copyright</a></td></tr>
+<tr><td>Firebase JavaScript SDK 12.17 (website)</td><td>Anonymous sign-in and the live database</td><td>Apache License 2.0. The iPhone app talks to the same Firebase services directly and includes no Firebase code.</td></tr>
+<tr><td>Turf for Swift 4.0 (iPhone app)</td><td>Map geometry, included with the Mapbox SDK</td><td>ISC License</td></tr>
+<tr><td>Archivo font (website)</td><td>Text on the website, loaded from Google Fonts only if you allow it</td><td>SIL Open Font License 1.1. <a href="https://fonts.google.com/specimen/Archivo">fonts.google.com/specimen/Archivo</a></td></tr>
+<tr><td>San Francisco system font and SF Symbols (iPhone app)</td><td>Text and icons on iPhone</td><td>Apple's license for apps on Apple platforms</td></tr>
+<tr><td>Academic building list (Plan my trip and Plan my walk)</td><td>Which buildings are academic halls and what each houses, from the university's published catalog (catalog.olemiss.edu). Building positions from OpenStreetMap</td><td>The university's catalog text, listed as facts and not copied. Positions &copy; OpenStreetMap contributors, under the Open Database License. <a href="https://www.openstreetmap.org/copyright">openstreetmap.org/copyright</a></td></tr>
+<tr><td>Campus parking map</td><td>The lot outlines and zone colors were drawn from the university's published parking map. The map picture itself is not used in ParkRadar</td><td>The university's map. The university's names, marks and maps belong to it. ParkRadar is not affiliated with it.</td></tr>
+<tr><td>ParkRadar name, logo and app icon</td><td>Branding</td><td>Belong to the ParkRadar project. Please do not use them in a way that suggests you are us.</td></tr>
+</table>
+
+<footer>ParkRadar is made by Park Radar LLC and is not affiliated with the University of Mississippi. See also the <a href="privacy.html">Privacy Policy</a>, <a href="terms.html">Terms of Service</a>, <a href="refunds.html">Refund Policy</a> and <a href="cookies.html">Cookie Policy</a>.</footer>
+</main>
+</body>
+</html>
