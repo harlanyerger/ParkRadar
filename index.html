@@ -13,6 +13,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ParkRadar</title>
 <script>
+/* Light or dark: apply the choice saved in this browser before the page paints, so there is no flash. "Automatic" saves nothing. */
+try { var pt = localStorage.getItem('pr.theme'); if (pt === 'light' || pt === 'dark') document.documentElement.dataset.theme = pt; } catch (e) {}
+</script>
+<script>
 /* Google Fonts is a third-party request, so it only loads after the visitor allows it (see the consent banner). */
 function loadFonts() {
   if (document.getElementById('pr-font')) return;
@@ -59,6 +63,8 @@ try { var pc = JSON.parse(localStorage.getItem('pr.consent') || 'null'); if (pc 
     --shadow-sm:0 2px 8px rgba(0,0,0,.4);
   }
 }
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
 :root[data-theme="dark"]{
   --bg:#09111E; --surface:#101B2C; --surface-2:#162337; --ink:#E8EDF5; --muted:#99A7BC; --line:#233249;
   --navy:#2B4F8C; --navy-2:#3862A6; --red:#ED5667; --red-press:#CF2E41; --red-fill:#D62839; --link:#8FB3FF;
@@ -311,6 +317,13 @@ main{position:relative;flex:1;min-height:0}
 .btn.full{width:100%}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .btn.big{height:54px;font-size:16px;border-radius:16px}
+.bt-chart{display:flex;align-items:flex-end;gap:4px;margin-top:12px;height:122px}
+.bt-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.bt-v{font-size:10.5px;font-weight:650;color:var(--ink);line-height:1.2}
+.bt-bar{display:block;width:100%;border-radius:4px}
+.bt-col.best .bt-bar{outline:2px solid var(--ink);outline-offset:1px}
+.bt-h{font-size:10.5px;color:var(--muted);line-height:1.2}
+.bt-col.now .bt-h{color:var(--ink);font-weight:800;text-decoration:underline}
 .acct-err{margin:10px 0 0;font-size:13.5px;font-weight:650;color:var(--a-full-t)}
 .acct-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .acct-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px}
@@ -1436,6 +1449,14 @@ function isDarkTheme() {
   const t = document.documentElement.dataset.theme;
   return t ? t === 'dark' : !!(prefersDark && prefersDark.matches);
 }
+/* Light, dark, or follow the device. Kept in this browser only (pr.theme); "Automatic" saves nothing. */
+const themeChoice = () => { const t = document.documentElement.dataset.theme; return t === 'light' || t === 'dark' ? t : 'system'; };
+function setTheme(v) {
+  const root = document.documentElement;
+  if (v === 'light' || v === 'dark') { root.dataset.theme = v; try { localStorage.setItem('pr.theme', v); } catch {} }
+  else { delete root.dataset.theme; try { localStorage.removeItem('pr.theme'); } catch {} }
+  applyMapMode();   // the street map has its own day and night look
+}
 function mbStyle() {
   return activeMapMode() === 'satellite'
     ? { url:'mapbox://styles/mapbox/standard-satellite', config:{ basemap:{ lightPreset:'day', showPointOfInterestLabels:false } } }
@@ -1999,6 +2020,7 @@ function panelMe() {
     <button class="row" data-act="toggleAlerts" aria-pressed="${pr.alertsOn}"><span class="row-main"><span class="row-t">Pop-up alerts</span><span class="row-s">Show new reports near your car while the app is open</span></span><span class="switch ${pr.alertsOn ? 'on' : ''}"></span></button>
     <div class="inrow"><div class="row-t" style="margin-bottom:8px">Alert distance from my car</div>${chips('radius', [[.25, '0.25 mi'], [.5, '0.5 mi'], [1, '1 mi']], pr.radius)}</div>
   </div></div>`;
+  h += `<div class="sect"><h2>Appearance</h2><div class="list"><div class="inrow">${chips('theme', [['system', 'Automatic'], ['light', 'Light'], ['dark', 'Dark']], themeChoice())}<p class="row-s" style="margin:8px 0 0">${{ system:"Follows your device's light or dark setting.", light:'Stays light whatever your device is set to.', dark:'Stays dark whatever your device is set to.' }[themeChoice()]}</p></div></div></div>`;
   h += `<div class="plus"><h2>Park<span>Radar</span>+</h2><p>Ideas for a paid version. Nothing here is promised and nothing is for sale yet.</p><ul>
     ${['Class schedule with daily leave-time reminders (iPhone)', 'Longer alert windows', 'Your own parking history', 'Hour-by-hour availability charts'].map(f => `<li>${I.check}${f}</li>`).join('')}</ul>
     <button class="btn ${pr.waitlist ? 'quiet' : 'red'} full" data-act="waitlist">${pr.waitlist ? "You're on the waitlist" : 'Join the waitlist'}</button>
@@ -2047,6 +2069,30 @@ function openReport(id) {
 function sheetHead(title, sub, icon = '') {
   return `<div class="grab"></div><div class="sh-head">${icon}<div style="min-width:0"><h2 id="sheetT">${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div><button class="x" data-act="closeSheet" aria-label="Close">${I.x}</button></div>`;
 }
+/* "Best times to arrive": the usual chance of a spot in a lot at each hour of a weekday, from the same reports and the same model the
+   trip planner uses (olPredict, with no live report mixed in). Same method as the iPhone app (Outlook.hourly). */
+const BT_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+const btLabel = h => `${h % 12 || 12}${h < 12 ? 'a' : 'p'}`, btSpoken = h => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+function btHourly(l, group) {
+  const ev = eventsByLot()[l.id] || [], day = new Date(S.now), wd = group === 0 ? 3 : 4;   // a Wednesday or a Thursday: the date only picks the kind of day
+  day.setDate(day.getDate() + ((wd - day.getDay() + 7) % 7));
+  const bars = BT_HOURS.map(h => { const at = new Date(day); at.setHours(h, 0, 0, 0); return { h, c: olPredict(l.demand, ev, null, at.getTime(), S.now).chance }; });
+  const reports = ev.filter(e => OL.chance[e.level] !== undefined && olDayGroup(e.at) === group && (S.now - e.at) / 86400000 <= OL.keepDays).length;
+  return { bars, reports };
+}
+function bestTimes(l) {
+  const today = olDayGroup(S.now), weekend = today === null, group = S.btGroup != null ? S.btGroup : (weekend ? 0 : today);
+  const { bars, reports } = btHourly(l, group);
+  const best = bars.reduce((a, b) => b.c > a.c ? b : a), worst = bars.reduce((a, b) => b.c < a.c ? b : a);   // the earliest hour wins a tie
+  const hi = olPercent(best.c), lo = olPercent(worst.c), nowH = !weekend && group === today ? new Date(S.now).getHours() : -1;
+  const summary = hi - lo < 10 ? `About the same all day, around ${hi}%.` : `Best around ${btSpoken(best.h)}, about ${hi}%. Busiest around ${btSpoken(worst.h)}, about ${lo}%.`;
+  const basis = reports === 0 ? 'No student reports for these days yet, so this is the usual campus pattern for a lot like this one. It is an estimate, not a promise.'
+    : `Based on ${reports} student ${reports === 1 ? 'report' : 'reports'} from the past 8 weeks, plus typical campus traffic. An estimate, not a promise.`;
+  const label = `Chance of a spot by hour, ${group === 0 ? 'Monday, Wednesday and Friday' : 'Tuesday and Thursday'}. ` + bars.map(b => `${btSpoken(b.h)}, ${olPercent(b.c)} percent`).join('. ');
+  return `${chips('btGroup', [[0, 'Mon \u00B7 Wed \u00B7 Fri'], [1, 'Tue \u00B7 Thu']], group)}
+    <div class="bt-chart" role="img" aria-label="${esc(label)}">${bars.map(b => `<div class="bt-col${b === best ? ' best' : ''}${b.h === nowH ? ' now' : ''}"><span class="bt-v">${olPercent(b.c)}</span><span class="bt-bar" style="height:${Math.max(6, Math.round(78 * b.c))}px;background:${olColor(b.c)}"></span><span class="bt-h">${btLabel(b.h)}</span></div>`).join('')}</div>
+    <p class="row-t" style="margin:12px 0 0;font-size:14px">${esc(summary)}</p><p class="row-s" style="margin:4px 0 0;font-size:12.5px">${esc(basis)}</p>${weekend ? `<p class="row-s" style="margin:4px 0 0;font-size:12.5px">Today is a weekend, so this shows a weekday. Weekends are usually quieter, but not on game days.</p>` : ''}`;
+}
 function sheetLot(l) {
   const st = lotStatus(l), lv = LEVELS[st.level];
   const enf = activeReports().filter(r => r.kind === 'enforcement' && rectDist(l, r.x, r.y) < 35);
@@ -2056,6 +2102,7 @@ function sheetLot(l) {
     <div class="row-s">${st.reported ? `Reported by a student ${ago(st.at).toLowerCase()}` : `Estimate from typical weekday traffic. No student reports in the last hour${st.lastAt ? ` (last one ${ago(st.lastAt).toLowerCase()})` : ''}.`}</div></div></div>`;
   if (!S.readOnly) h += `<div class="levels">${Object.entries(LEVELS).map(([k, v]) => `<button data-act="avail" data-v="${k}" style="--lc:${v.color}" aria-label="Mark ${esc(l.name)} as ${v.label}"><i></i>${v.short}</button>`).join('')}</div>`;
   h += `</div>`;
+  h += `<div class="blk"><h3>Best times to arrive</h3>${bestTimes(l)}</div>`;
   h += `<div class="blk"><h3>Enforcement here</h3>${enf.length
     ? enf.map(r => `<button class="row" style="padding:8px 0" data-act="report" data-id="${esc(r.id)}"><span class="ic enf">${I.car}</span><span class="row-main"><span class="row-t">Reported ${ago(r.at).toLowerCase()}</span><span class="row-s">Seen by ${seenBy(r)}</span></span>${I.chev}</button>`).join('')
     : `<p class="row-s" style="margin:0">None reported in the last 15 minutes.</p>`}</div>`;
@@ -2615,6 +2662,7 @@ document.addEventListener('click', async e => {
     case 'planTrip': S.planPicked = null; S.hallChanging = false; S.hallQ = ''; openSheet({ type:'plan' }); fitPlan(); refreshHistory(); break;
     case 'planDest': S.plan.dest = v; S.hallChanging = false; S.hallQ = ''; S.planPicked = null; savePlan(); renderSheet(); renderMapDyn(); fitPlan(); break;
     case 'hallChange': S.hallChanging = true; S.hallQ = ''; renderSheet(); requestAnimationFrame(() => { const i = $('.hallq'); if (i) i.focus(); }); break;
+    case 'btGroup': S.btGroup = Number(v); renderSheet(); break;
     case 'planDay': S.plan.day = Number(v); savePlan(); renderSheet(); renderMapDyn(); break;
     case 'driveEst': estimateDrive(); break;
     case 'planDrive': S.driveNote = ''; S.plan.drive = clamp(S.plan.drive + Number(v), 0, 90); savePlan(); renderSheet(); break;
@@ -2675,6 +2723,7 @@ document.addEventListener('click', async e => {
     }
     case 'resArea': S.profile.resArea = v; saveProfile(); render(); break;
     case 'permit': S.profile.permit = v; saveProfile(); render(); break;
+    case 'theme': setTheme(v); renderPanel(); break;
     case 'radius': S.profile.radius = Number(v); saveProfile(); renderPanel(); break;
     case 'toggleAlerts': S.profile.alertsOn = !S.profile.alertsOn; saveProfile(); renderPanel(); break;
     case 'waitlist': S.profile.waitlist = !S.profile.waitlist; saveProfile(); renderPanel(); toast(S.profile.waitlist ? "You're on the ParkRadar+ waitlist." : 'Removed from the waitlist.'); break;
