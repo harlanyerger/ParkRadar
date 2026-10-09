@@ -82,7 +82,7 @@ body{height:100%;overscroll-behavior:none;margin:0;background:var(--bg);color:va
 *,*::before,*::after{box-sizing:border-box}
 button,input{font:inherit;color:inherit}
 button,[data-act],.tab,.chip{touch-action:manipulation}
-button,.tabs,.top,#map,.lotpin{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+button,.tabs,#map,.lotpin{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #panel,#sheet,#searchRes,#onboard{overscroll-behavior:contain}
 button{cursor:pointer;border:0;background:none;padding:0}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:8px}
@@ -91,18 +91,15 @@ button{cursor:pointer;border:0;background:none;padding:0}
 #app{position:relative;height:100%;max-width:540px;margin:0 auto;display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
 @media (min-width:600px){#app{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.12)}}
 
-/* header */
-.top{flex:none;padding:calc(8px + var(--sat)) max(16px, env(safe-area-inset-right,0px)) 10px max(16px, env(safe-area-inset-left,0px));background:var(--brand-navy);color:#fff;z-index:5}
-.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px}
-.wm{position:relative;display:inline-flex;align-items:baseline;font-weight:850;font-stretch:112%;font-size:21px;letter-spacing:-.02em;line-height:1;color:#fff}
-.wm .wm-r{position:relative;color:#FF4052}
-.arcs{position:absolute;left:.06em;top:-.52em;width:.5em;height:.5em;overflow:visible}
-.arcs path{fill:none;stroke:#FF4052;stroke-width:2.4;stroke-linecap:round}
-.mode{display:inline-flex;align-items:center;gap:7px;min-height:32px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.78);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 11px;border-radius:999px}
-.mode i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55)}
-.mode.on{color:#fff}
-.mode.on i{background:var(--a-plenty);box-shadow:0 0 0 3px color-mix(in srgb,var(--a-plenty) 25%,transparent)}
-.search{position:absolute;left:12px;right:12px;top:12px;z-index:3;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 16px;height:46px;box-shadow:0 2px 10px rgba(15,27,46,.14)}
+/* The map runs to the top of the screen. In the installed app the status bar sits over it, so a strip keeps the clock readable:
+   a soft navy fade on the map, a solid strip on the other tabs. In a browser tab the inset is 0 and the strip has no height. */
+.sbar{position:absolute;left:0;right:0;top:0;height:var(--sat);background:var(--brand-navy);z-index:7;pointer-events:none}
+#app[data-tab="map"] .sbar{height:calc(var(--sat) * 1.55);background:linear-gradient(to bottom,rgba(19,39,74,.92),rgba(19,39,74,.55) 55%,rgba(19,39,74,0))}
+.mode{position:absolute;right:12px;top:calc(12px + var(--sat));z-index:3;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 10px rgba(15,27,46,.14)}
+.mode i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.mode.on i{background:var(--a-plenty);box-shadow:0 0 0 6px color-mix(in srgb,var(--a-plenty) 28%,transparent)}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.search{position:absolute;left:12px;right:66px;top:calc(12px + var(--sat));z-index:3;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 16px;height:46px;box-shadow:0 2px 10px rgba(15,27,46,.14)}
 .search svg{width:18px;height:18px;flex:none;color:var(--muted)}
 .search input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px;height:100%;color:var(--ink);-webkit-appearance:none;appearance:none}
 .search input::placeholder{color:var(--muted)}
@@ -113,7 +110,7 @@ main{position:relative;flex:1;min-height:0}
 #mapWrap{position:absolute;inset:0}
 #map{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;background:var(--land)}
 #map:active{cursor:grabbing}
-#panel{position:absolute;inset:0;overflow:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
+#panel{position:absolute;inset:0;padding-top:var(--sat);overflow:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
 
 /* map svg classes */
 .lot{fill:transparent;stroke:none}
@@ -162,11 +159,11 @@ main{position:relative;flex:1;min-height:0}
 #mapWrap > .mapboxgl-control-container > div{z-index:auto}
 #mapWrap:not(.mb) > .mapboxgl-control-container{display:none}
 #mapWrap .mapboxgl-ctrl-attrib{font-size:10.5px;line-height:18px}
-.mapmenu{position:absolute;right:64px;top:68px;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.mapmenu{position:absolute;right:64px;top:calc(68px + var(--sat));min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .mapmenu button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;text-align:left;font-weight:600;font-size:15px}
 .mapmenu button + button{border-top:1px solid var(--line)}
 .mapmenu button svg{width:20px;height:20px;flex:none;color:var(--muted)}
-.mapmenu.hi{top:12px}
+.mapmenu.hi{top:calc(12px + var(--sat))}
 .mapmenu .ck{margin-left:auto;color:var(--navy)}
 .mapmenu .ck svg{color:inherit}
 :root[data-theme="dark"] .mapmenu .ck{color:#8FB3FF}
@@ -205,11 +202,11 @@ main{position:relative;flex:1;min-height:0}
 /* map overlay UI */
 .ctrls.round{border-radius:999px}
 .ctrls.mt{margin-bottom:10px;position:static;border-radius:999px}
-.walkto{position:absolute;left:12px;top:68px;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 10px rgba(15,27,46,.14);font-weight:650;font-size:14px;color:var(--ink)}
+.walkto{position:absolute;left:12px;top:calc(68px + var(--sat));display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 10px rgba(15,27,46,.14);font-weight:650;font-size:14px;color:var(--ink)}
 .walkto svg{flex:none;color:var(--navy)}
-.ctrlcol{position:absolute;right:12px;top:68px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.ctrlcol{position:absolute;right:12px;top:calc(68px + var(--sat));display:flex;flex-direction:column;gap:10px;align-items:flex-end}
 .ctrlcol .ctrls{position:static}
-.ctrlcol.hi{top:12px}
+.ctrlcol.hi{top:calc(12px + var(--sat))}
 .mapcard2{position:absolute;left:12px;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
 .mapcard2 .status{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px}
 .mapcard2 .status .ic{width:36px;height:36px}
@@ -236,13 +233,13 @@ main{position:relative;flex:1;min-height:0}
 
 #mapUI{position:absolute;inset:0;pointer-events:none}
 #mapUI > *{pointer-events:auto}
-.ctrls{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;background:var(--surface);border-radius:12px;box-shadow:var(--shadow-sm);border:1px solid var(--line);overflow:hidden}
+.ctrls{position:absolute;right:12px;top:calc(12px + var(--sat));display:flex;flex-direction:column;background:var(--surface);border-radius:12px;box-shadow:var(--shadow-sm);border:1px solid var(--line);overflow:hidden}
 .ctrls button{width:44px;height:44px;display:grid;place-items:center;color:var(--ink)}
 .ctrls button + button{border-top:1px solid var(--line)}
 .ctrls svg{width:20px;height:20px}
-.pill{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 12px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:650;font-size:14px;box-shadow:var(--shadow-sm);border:1px solid var(--line)}
+.pill{position:absolute;left:12px;top:calc(12px + var(--sat));display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 12px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:650;font-size:14px;box-shadow:var(--shadow-sm);border:1px solid var(--line)}
 .pill svg{width:18px;height:18px;color:var(--navy)}
-.pickbar{position:absolute;left:12px;right:66px;top:12px;display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--brand-navy);color:#fff;font-size:14px;font-weight:600;box-shadow:var(--shadow)}
+.pickbar{position:absolute;left:12px;right:66px;top:calc(12px + var(--sat));display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--brand-navy);color:#fff;font-size:14px;font-weight:600;box-shadow:var(--shadow)}
 .pickbar span{flex:1}
 .pickbar button{height:32px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.14);color:#fff;font-weight:650;font-size:13px}
 .mapcard{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
@@ -333,6 +330,16 @@ main{position:relative;flex:1;min-height:0}
 .fullq{background:var(--surface-2);border-radius:14px;padding:14px;margin-bottom:14px}
 .fullq-links{display:flex;justify-content:space-between;margin-top:10px}
 .fullq-links button{font-size:13.5px;font-weight:650;color:var(--link);padding:6px 0;min-height:32px}
+.modrow{display:flex;gap:22px;flex-wrap:wrap;margin-top:6px}
+.modrow button{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:13.5px;font-weight:650;color:var(--link)}
+.modbox{background:var(--surface-2);border-radius:14px;padding:14px;margin-top:8px;display:grid;gap:8px}
+.modbox .actions{margin-top:0}
+.row .unb{flex:none;min-height:44px;padding:0 4px;font-size:13.5px;font-weight:700;color:var(--link)}
+.leaveopts{display:grid;gap:8px}
+.leaveopts button{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left}
+.leaveopts button i{width:12px;height:12px;border-radius:50%;background:var(--lc);flex:none}
+.leaveopts button:hover{border-color:var(--lc)}
+.leaveopts button:disabled{opacity:.6;cursor:progress}
 .hallq{display:block;width:100%;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface-2);padding:0 12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;color:var(--ink)}
 .hallq::placeholder{color:var(--muted);opacity:1}
 .hallq:focus{border-color:var(--focus);background:var(--surface)}
@@ -466,7 +473,7 @@ button.row:hover{background:var(--surface-2)}
 .about p:last-child{margin:0}
 
 /* search results */
-#searchRes{position:absolute;left:12px;right:12px;top:66px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;z-index:6;max-height:60%;overflow-y:auto}
+#searchRes{position:absolute;left:12px;right:12px;top:calc(66px + var(--sat));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;z-index:6;max-height:60%;overflow-y:auto}
 
 /* tabs */
 .tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;background:var(--surface);border-top:1px solid var(--line);padding:6px max(4px, env(safe-area-inset-right,0px)) max(6px, calc(var(--sab) - 8px)) max(4px, env(safe-area-inset-left,0px));z-index:5}
@@ -483,7 +490,7 @@ button.row:hover{background:var(--surface-2)}
 /* toast + banner */
 #toast{position:absolute;left:50%;bottom:calc(86px + max(0px, var(--sab) - 14px));transform:translate(-50%,20px);max-width:calc(100% - 32px);width:max-content;background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-#banner{position:absolute;left:10px;right:10px;top:8px;z-index:8;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:16px;background:var(--red-fill);color:#fff;box-shadow:var(--shadow);animation:drop .25s ease-out}
+#banner{position:absolute;left:10px;right:10px;top:calc(8px + var(--sat));z-index:8;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:16px;background:var(--red-fill);color:#fff;box-shadow:var(--shadow);animation:drop .25s ease-out}
 #banner.navy{background:var(--brand-navy)}
 .tip{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);margin-bottom:18px}
 .tip-ic{flex:none;width:38px;height:38px;border-radius:11px;background:var(--brand-navy);color:#fff;display:grid;place-items:center}
@@ -549,13 +556,9 @@ button.row:hover{background:var(--surface-2)}
 <body>
 <div id="consent" hidden role="dialog" aria-modal="false" aria-labelledby="consentT"></div>
 <div id="app">
-  <header class="top">
-    <div class="top-row">
-      <div class="wm" role="img" aria-label="ParkRadar"><span>Park</span><span class="wm-r"><svg class="arcs" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 10.5A3.5 3.5 0 0 1 5.5 14"/><path d="M2 6.5A7.5 7.5 0 0 1 9.5 14"/><path d="M2 2.5A11.5 11.5 0 0 1 13.5 14"/></svg>Radar</span></div>
-      <button class="mode" id="modePill" data-act="modeInfo"><i></i><span>Connecting</span></button>
-    </div>
-  </header>
+  <div class="sbar" aria-hidden="true"></div>
   <main id="main">
+    <button class="mode" id="modePill" data-act="modeInfo" aria-label="Reports: connecting"><i></i><span class="sr">Connecting</span></button>
     <label class="search" id="searchBox">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
       <input id="q" type="search" placeholder="Search lots and places" autocomplete="off" aria-label="Search lots and places">
@@ -727,7 +730,7 @@ const LEVELS = {
 const VEHICLES = ['Golf cart', 'Truck', 'SUV', 'Sedan', 'On foot'];
 
 /* ---------------- state ---------------- */
-const DEFAULT_PROFILE = { onboarded:false, permit:'blue', resArea:null, vehicle:'', car:null, radius:.5, alertsOn:true, waitlist:false };
+const DEFAULT_PROFILE = { onboarded:false, permit:'blue', resArea:null, vehicle:'', car:null, radius:.5, alertsOn:true, waitlist:false, blocked:[] };
 const S = {
   tab:'map', sheet:null, pick:null, q:'', mapMode: ['streets', 'satellite'].includes(lsGet('pr.mapMode', 'streets')) ? lsGet('pr.mapMode', 'streets') : 'streets', mapMenu:false, carMenu:false, loc:null, locPending:null,
   lotsSeg:'avail', lotsFilter:'mine', zonesFilter:'mine', alertsSeg:'all',
@@ -746,6 +749,7 @@ function sanitizeProfile() {
   if (p.car && p.car.v !== MAP_V) p.car = null;          // spots saved on the old map don't line up with this one
   if (!ZONES[p.permit]) p.permit = 'blue';
   if (p.resArea && !RES_AREAS[p.resArea]) p.resArea = null;
+  p.blocked = Array.isArray(p.blocked) ? p.blocked.filter(x => typeof x === 'string').slice(-200) : [];
 }
 sanitizeProfile();
 
@@ -945,7 +949,7 @@ function typicalLevel(l) {
   return v > .85 ? 'full' : v > .62 ? 'few' : v > .35 ? 'some' : 'plenty';
 }
 function lotStatus(l) {
-  const d = S.lots[l.id];
+  const d = lotRec(l.id);
   if (d && S.now - d.at < AVAIL_TTL && LEVELS[d.level]) return { level:d.level, reported:true, at:d.at };
   return { level:typicalLevel(l), reported:false, lastAt:d?.at };
 }
@@ -1117,7 +1121,7 @@ let histCache = null, histSaveT = null, histSince = lsGet('pr.histSince', 0), hi
 function eventsByLot() {
   if (histCache) return histCache;
   const g = {};
-  for (const e of olCleaned(S.hist)) (g[e.lot] = g[e.lot] || []).push(e);
+  for (const e of olCleaned(S.hist.filter(e => !isBlocked(e.by)))) (g[e.lot] = g[e.lot] || []).push(e);
   return histCache = g;
 }
 function mergeEvents(list) {
@@ -1186,7 +1190,7 @@ function planCandidates(place) {
   return out;
 }
 function planOutlook(lot, at) {
-  const l = S.lots[lot.id], live = l && LEVELS[l.level] ? { level:l.level, at:l.at } : null;
+  const l = lotRec(lot.id), live = l && LEVELS[l.level] ? { level:l.level, at:l.at } : null;
   return olPredict(lot.demand, eventsByLot()[lot.id] || [], live, at.getTime(), S.now);
 }
 // How much earlier to arrive to get a clearly better chance, if arriving earlier helps.
@@ -1215,8 +1219,75 @@ function planResult() {
 }
 const lastSeen = r => Math.max(Number(r.at) || 0, ...Object.values(r.confirms || {}).filter(v => typeof v === 'number'));
 const goneCount = r => Object.keys(r.gone || {}).length;
+/* ---------------- report, block and hide ---------------- */
+/* Safety tools for what other people post. Same rules as the iPhone app (AppModel+Moderation.swift). */
+const FLAG_REASONS = { wrong:'Not real, or in the wrong place', offensive:'Offensive or inappropriate', personal:'Shows personal information', spam:'Spam or a joke', other:'Something else' };
+const FLAG_HIDE = 3, MAX_BLOCKED = 200, CONTACT = 'parkradar@parkradarapp.com';   // this many different people reporting a post hides it for everyone
+let hiddenIds = new Set(lsGet('pr.hidden', []));   // posts you reported: hidden for you right away
+const isBlocked = id => !!id && (S.profile.blocked || []).includes(id);
+function isHidden(r) {   // enough people reported it, or (when it isn't yours) you reported it or blocked the person
+  if (Object.keys(r.flags || {}).length >= FLAG_HIDE) return true;
+  if (r.by === myKey()) return false;
+  return hiddenIds.has(r.id) || !!(r.flags && r.flags[myKey()]) || isBlocked(r.by);
+}
+const lotRec = id => { const d = S.lots[id]; return d && !isBlocked(d.by) ? d : null; };   // a lot's latest level, unless it came from someone you blocked
+async function flagReport(id, reason) {
+  if (!FLAG_REASONS[reason]) return;
+  hiddenIds.add(id); lsSet('pr.hidden', [...hiddenIds].slice(-300));
+  S.modUI = null; closeSheet();
+  let sent = true;
+  if (S.db) {
+    const { f, db } = S.db;
+    try { await withRetry(() => f.updateDoc(f.doc(db, 'reports', id), { [`flags.${myKey()}`]: reason })); } catch { sent = false; }
+  } else {
+    const r = S.reports.find(x => x.id === id); if (r) r.flags = { ...(r.flags || {}), [myKey()]: reason };
+    persistLocal();
+  }
+  refreshLive();
+  toast(sent ? "Thanks. It's hidden for you, and we'll review it." : `Hidden for you, but we couldn't send it. Email ${CONTACT} so we can look.`);
+}
+function blockAuthor(id) {
+  const r = S.reports.find(x => x.id === id); if (!r || !r.by || r.by === myKey()) return;
+  if (!isBlocked(r.by)) { S.profile.blocked = [...(S.profile.blocked || []), r.by].slice(-MAX_BLOCKED); histCache = null; saveProfile(); }
+  S.modUI = null; closeSheet(); refreshLive();
+  toast("Blocked. You won't see their posts. Undo it in the Me tab.");
+}
+function unblockAll() {
+  if (!(S.profile.blocked || []).length) return;
+  S.profile.blocked = []; histCache = null; saveProfile(); renderPanel(); refreshLive();
+  toast('Everyone is unblocked.');
+}
+/* A small safety net for the free text in reports (note, plate): obvious profanity, slurs and threats are refused before anything
+   is posted. The list is base64 so it does not sit in plain view; the method matches TextFilter.swift. Flags and blocks handle the rest. */
+const FILTER_MSG = "That wording isn't allowed. Keep reports to what you saw and where.";
+const textIsObjectionable = (() => {
+  const all = atob('YXNzaG9sZSxhc3Nob2xlcyxiYXN0YXJkLGJlYW5lcixiaXRjaCxiaXRjaGVzLGJsb3dqb2IsYnVsbHNoaXQsY2hpbmssY2hpbmtzLGNvY2ssY29ja3N1Y2tlcixjdW0sY3VudCxkaWNrLGRpY2toZWFkLGRvdWNoZSxkb3VjaGViYWcsZHVtYmFzcyxmYWcsZmFnZ290LGZhZ2dvdHMsZmFncyxmdWNrLGZ1Y2tlcixmdWNrZXJzLGdvIGRpZSxnb29rLGdvb2tzLGhhbmRqb2IsaG9wZSB5b3UgZGllLGphY2tvZmYsaml6eixraWtlLGtpbGwgaGVyLGtpbGwgaGltLGtpbGwgeW91LGtpbGwgeW91cnNlbGYsa3lzLG1vdGhlcmZ1Y2tlcixtb3RoZXJmdWNrZXJzLG5pZ2dhLG5pZ2dhcyxuaWdnZXIsbmlnZ2Vycyxwb3JuLHBvcm5vLHByaWNrLHB1c3N5LHJhcGUscmFwaXN0LHJldGFyZCxyZXRhcmRlZCxyZXRhcmRzLHNoaXQsc2hpdHR5LHNob290IGhlcixzaG9vdCBoaW0sc2hvb3QgeW91LHNsdXQsc3BpYyxzcGljcyx0cmFubnksdHdhdCx3YW5rZXIsd2V0YmFjayx3aG9yZQ==').split(',');
+  const collapse = w => w.replace(/(.)\1+/g, '$1');
+  const words = all.filter(w => !w.includes(' ')), phrases = all.filter(w => w.includes(' '));
+  const wordSet = new Set(words), squeezed = new Set(words.map(collapse));
+  const look = { '0':'o', '1':'i', '3':'e', '4':'a', '5':'s', '7':'t', '@':'a', '$':'s', '!':'i' }, endings = ['s', 'es', 'ed', 'ing', 'er', 'y'];
+  const hit = t => {
+    if (wordSet.has(t) || squeezed.has(collapse(t))) return true;
+    for (const e of endings) if (t.endsWith(e) && t.length > e.length + 2) { const stem = t.slice(0, -e.length); if (wordSet.has(stem) || squeezed.has(collapse(stem))) return true; }
+    return false;
+  };
+  return text => {
+    let cleaned = '';
+    for (const ch of String(text || '').toLowerCase()) cleaned += look[ch] || (/\p{L}/u.test(ch) ? ch : ' ');
+    const tokens = cleaned.split(' ').filter(Boolean);
+    if (tokens.some(hit)) return true;
+    let run = [];   // "f u c k": runs of single letters are read together, and any stretch of four or more inside one is checked
+    for (const t of [...tokens, '']) {
+      if ([...t].length === 1) { run.push(t); continue; }
+      if (run.length >= 4) for (let i = 0; i < run.length; i++) for (let j = i + 4; j <= run.length; j++) if (hit(run.slice(i, j).join(''))) return true;
+      run = [];
+    }
+    const spaced = ' ' + tokens.join(' ') + ' ';
+    return phrases.some(ph => spaced.includes(' ' + ph + ' '));
+  };
+})();
 function isActive(r) {
-  if (!r || r.v !== MAP_V || typeof r.x !== 'number' || typeof r.y !== 'number') return false;
+  if (!r || r.v !== MAP_V || typeof r.x !== 'number' || typeof r.y !== 'number' || isHidden(r)) return false;
   if (goneCount(r) >= 2 || (r.by && r.gone && r.gone[r.by])) return false;
   if (r.kind === 'closure') return (r.until || 0) > S.now;
   return S.now - lastSeen(r) < ENF_TTL;
@@ -1322,7 +1393,11 @@ async function saveProfile() {
   const { f, db } = S.db;
   do {
     pDirty = false;
-    try { await f.setDoc(f.doc(db, 'users', S.me.id), JSON.parse(JSON.stringify(S.profile))); }
+    try {
+      const doc = JSON.parse(JSON.stringify(S.profile));
+      if (!doc.blocked || !doc.blocked.length) delete doc.blocked;   // left out while empty, so settings keep saving even before the database rules know about it
+      await f.setDoc(f.doc(db, 'users', S.me.id), doc);
+    }
     catch (e) { console.warn('ParkRadar: could not save settings', e); break; }
   } while (pDirty);
   pSaving = false;
@@ -1378,7 +1453,7 @@ async function initRuntime() {
 }
 
 function maybeAlert(r) {
-  if (!S.profile.alertsOn || r.kind !== 'enforcement' || !(r.at > S.loadedAt) || r.by === myKey()) return;
+  if (!S.profile.alertsOn || r.kind !== 'enforcement' || !(r.at > S.loadedAt) || r.by === myKey() || isHidden(r)) return;
   S.now = Date.now();
   const c = S.profile.car, d = describe(r.x, r.y);
   if (c && dist(c, r) / U_PER_MI <= S.profile.radius) {
@@ -1625,9 +1700,12 @@ function animateTo(t) {
   };
   anim = requestAnimationFrame(step);
 }
-function occluded() {
+const SAT_PROBE = document.createElement('div');   // measures the status bar inset (0 in a browser tab)
+SAT_PROBE.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px)';
+const safeTopPx = () => { if (!SAT_PROBE.isConnected) document.body.appendChild(SAT_PROBE); return parseFloat(getComputedStyle(SAT_PROBE).paddingTop) || 0; };
+function occluded() {   // the map runs under the status bar, so that strip counts as covered
   const sh = $('#sheet');
-  return { top: !sh.hidden ? 12 : 64, bottom: !sh.hidden ? sh.offsetHeight : (S.tab === 'map' ? 126 : 0) };
+  return { top: (!sh.hidden ? 12 : 64) + safeTopPx(), bottom: !sh.hidden ? sh.offsetHeight : (S.tab === 'map' ? 126 : 0) };
 }
 function fitBox(x0, y0, x1, y1, animate = true, minW = 420) {
   const s = mapSize(), o = occluded();
@@ -1841,11 +1919,14 @@ function renderMapDyn() { renderLots(); renderRoute(); renderPins(); }
 /* ---------------- UI render ---------------- */
 function syncHeader() {
   const pill = $('#modePill');
+  const label = S.mode === 'live' ? 'Live' : S.mode === 'local' ? 'This device' : 'Connecting';
   pill.classList.toggle('on', S.mode === 'live');
-  pill.querySelector('span').textContent = S.mode === 'live' ? 'Live' : S.mode === 'local' ? 'This device' : 'Connecting';
-  $('#searchBox').hidden = S.tab !== 'map' || !!S.sheet || !!S.pick;
+  pill.querySelector('span').textContent = label;
+  pill.setAttribute('aria-label', `Reports: ${label}`);
+  pill.hidden = $('#searchBox').hidden = S.tab !== 'map' || !!S.sheet || !!S.pick;
 }
 function renderTabs() {
+  $('#app').dataset.tab = S.tab;
   const n = activeReports().filter(r => r.kind === 'enforcement').length;
   const t = (id, label, icon, extra = '') => `<button class="tab" data-act="tab" data-v="${id}" ${S.tab === id ? 'aria-current="page"' : ''}>${icon}${extra}<span>${label}</span></button>`;
   $('#tabs').innerHTML =
@@ -1890,10 +1971,11 @@ function renderMapUI() {
     const carBtn = c
       ? `<button data-act="openCar">${I.car.replace('<svg', '<svg width="16" height="16"')}<span>${dcar != null ? `Your car \u00B7 ${miles(dcar)} away` : `Your car: ${esc(carPlaceText())}`}</span></button>`
       : `<button data-act="carChoose"${S.carFinding ? ' disabled' : ''}>${I.car.replace('<svg', '<svg width="16" height="16"')}<span>${S.carFinding ? 'Finding your exact spot\u2026' : 'Save where I parked'}</span></button>`;
-    const pl = parkPrompt();
+    const ll = leavePrompt(), pl = ll ? null : parkPrompt();
+    const leaveRow = ll ? `<div class="parkwrap"><button class="parkrow" data-act="leaveStart"><span class="pk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 8l4 4-4 4"/></svg></span><span class="row-main"><span class="pk-t">I'm leaving now</span><span class="pk-s">Your car is in ${esc(ll.name)}. Tell us how full it is.</span></span></button></div>` : '';
     const parkRow = pl ? `<div class="parkwrap"><button class="parkrow" data-act="carHere"${S.carFinding ? ' disabled' : ''}><span class="pk-ic">${S.carFinding ? '<i class="spin" aria-hidden="true"></i>' : I.car}</span><span class="row-main"><span class="pk-t">${S.carFinding ? 'Finding your exact spot\u2026' : "I'm parked here"}</span><span class="pk-s">${S.carFinding ? 'Hold still for a few seconds.' : `You're in ${esc(pl.name)}. Pins your exact spot.`}</span></span></button></div>` : '';
     if (S.carMenu && !c) h += `<div class="carmenu" role="menu" aria-label="Where did you park?"><button data-act="carHere">${I.loc}<span>Use my current location</span></button><button data-act="carPick">${I.pin}<span>Pick on the map</span></button></div>`;
-    h += `<div class="mapcard2">${status}${parkRow}<div class="acts">${carBtn}<i></i><button data-act="planTrip">${I.clock}<span>Plan my trip</span></button></div></div>`;
+    h += `<div class="mapcard2">${status}${leaveRow}${parkRow}<div class="acts">${carBtn}<i></i><button data-act="planTrip">${I.clock}<span>Plan my trip</span></button></div></div>`;
   }
   ui.innerHTML = h;
   placeMbCtrls();
@@ -1951,7 +2033,7 @@ function feedItems() {
   const items = [];
   for (const r of activeReports()) items.push({ t:lastSeen(r), x:r.x, y:r.y, kind:r.kind, r });
   for (const l of LOTS) {
-    const d = S.lots[l.id];
+    const d = lotRec(l.id);
     if (d && S.now - d.at < AVAIL_TTL && LEVELS[d.level]) { const c = center(l); items.push({ t:d.at, x:c.x, y:c.y, kind:'avail', lot:l, level:d.level }); }
   }
   return items.sort((a, b) => b.t - a.t);
@@ -2031,6 +2113,10 @@ function panelMe() {
     <p>The streets and satellite maps come from Mapbox. The lot outlines and zone colors are based on the campus parking map. ParkRadar is unofficial. As listed there, zone rules apply 7:30 AM to 5 PM on weekdays, but rules change, so check the university's current parking rules before you park.</p>
     <p>${S.mode === 'live' ? 'Reports are live and shared with everyone who has this app open. Your car, permit and settings are private to you.' : 'Right now reports are saved on this device only.'}</p>
   </div></div>`;
+  const nb = (S.profile.blocked || []).length;
+  h += `<div class="sect"><h2>Safety</h2><div class="list"><div class="row"><span class="row-main"><span class="row-t">Blocked people</span><span class="row-s">${nb ? `${nb} blocked. Their reports and lot updates are hidden from you.` : 'No one. To block someone, open one of their reports and tap Block.'}</span></span>${nb ? '<button class="unb" data-act="unblockAll">Unblock all</button>' : ''}</div>
+    <a class="row" href="mailto:${CONTACT}?subject=ParkRadar%20report"><span class="row-main"><span class="row-t">Report a problem</span><span class="row-s">Email ${CONTACT} about a post, a person or anything unsafe</span></span>${I.chev}</a>
+    <a class="row" href="terms.html#community" target="_blank" rel="noopener"><span class="row-main"><span class="row-t">Community rules</span><span class="row-s">What's allowed in reports, and how we handle problems</span></span>${I.chev}</a></div></div>`;
   h += `<div class="sect"><h2>Privacy choices</h2><div class="list"><button class="row" data-act="consentOpen"><span class="row-main"><span class="row-t">Maps and fonts from other companies</span><span class="row-s">${extOK() ? 'Allowed: Mapbox maps and Google Fonts. Tap to change.' : S.consent ? 'Not allowed: showing lots on a plain background. Tap to change.' : 'Not chosen yet. Tap to choose.'}</span></span>${I.chev}</button>
     <button class="row" data-act="deleteData"><span class="row-main"><span class="row-t" style="color:var(--red)">Delete my data</span><span class="row-s">${acctUser() ? 'Removes your reports, settings, saved car and account, including your email' : 'Removes your reports, settings, saved car and anonymous account'}</span></span></button></div></div>`;
   h += `<div class="sect"><div class="list"><button class="row" data-act="reset"><span class="row-main"><span class="row-t" style="color:var(--red)">Reset my settings</span><span class="row-s">Clears your permit, vehicle and saved car</span></span></button>
@@ -2044,7 +2130,7 @@ function panelMe() {
 
 /* sheets */
 function openSheet(sh) {
-  S.sheet = sh; S.tab = 'map';
+  S.sheet = sh; S.tab = 'map'; S.modUI = null;
   S.hallChanging = false; S.hallQ = '';   // the building search starts closed and empty each time
   if (sh.type !== 'newReport') { S.pick = null; S.draft = null; }
   if (sh.type !== 'walk') S.walk = null;
@@ -2052,7 +2138,7 @@ function openSheet(sh) {
   render();
 }
 function closeSheet() {
-  S.sheet = null; S.pick = null; S.draft = null; S.walk = null; S.zoneFocus = null;
+  S.modUI = null; S.sheet = null; S.pick = null; S.draft = null; S.walk = null; S.zoneFocus = null;
   render(); settleView();
 }
 function openLot(id) {
@@ -2111,13 +2197,22 @@ function sheetLot(l) {
     <button class="btn line" data-act="walkFrom" data-id="${l.id}">${I.walk}Walk to class</button></div>`;
   return h;
 }
+function modRow(r) {   // report this post / block this person (not for your own posts)
+  if (r.by === myKey() || S.readOnly) return '';
+  const open = S.modUI && S.modUI.id === r.id ? S.modUI.mode : null, ic = d => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  let h = `<div class="modrow"><button data-act="flagOpen" data-id="${esc(r.id)}" aria-expanded="${open === 'flag'}">${ic('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>')}Report this post</button><button data-act="blockOpen" data-id="${esc(r.id)}" aria-expanded="${open === 'block'}">${ic('<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>')}Block this person</button></div>`;
+  if (open === 'flag') h += `<div class="modbox" role="group" aria-label="Why are you reporting this?"><div class="row-t">Why are you reporting this?</div><p class="row-s" style="margin:0">It will be hidden for you, and we'll review it.</p>${Object.entries(FLAG_REASONS).map(([k, v]) => `<button class="btn line full" data-act="flagPick" data-id="${esc(r.id)}" data-v="${k}">${esc(v)}</button>`).join('')}</div>`;
+  if (open === 'block') h += `<div class="modbox" role="group" aria-label="Block this person?"><div class="row-t">Block this person?</div><p class="row-s" style="margin:0">You won't see their reports or lot updates. You can undo this in the Me tab.</p><div class="actions"><button class="btn red" data-act="blockDo" data-id="${esc(r.id)}">Block</button><button class="btn line" data-act="modClose">Cancel</button></div></div>`;
+  return h;
+}
 function sheetReport(r) {
   const d = describe(r.x, r.y), c = S.profile.car, mine = r.by === myKey();
   if (r.kind === 'closure') {
     let h = sheetHead(esc(r.note || 'Road closure'), `${esc(d.text)}. Until ${clock(r.until)}`, `<span class="ic clo">${I.warn}</span>`);
     h += `<p class="row-s">Posted ${ago(r.at).toLowerCase()}.</p>`;
+    const modClosure = modRow(r);
     if (!S.readOnly) h += `<div class="actions">${mine ? `<button class="btn line" data-act="removeMine" data-id="${esc(r.id)}">Remove my report</button>` : `<button class="btn line" data-act="gone" data-id="${esc(r.id)}">It's open again</button>`}</div>`;
-    return h;
+    return h + modClosure;
   }
   const n = seenBy(r), mineConf = (r.confirms || {})[myKey()];
   let h = sheetHead('Enforcement reported', `${ago(r.at)}, ${esc(lc(d.text))}`, `<span class="ic enf solid">${I.car}</span>`);
@@ -2134,7 +2229,7 @@ function sheetReport(r) {
       : `<div class="actions"><button class="btn red" data-act="confirm" data-id="${esc(r.id)}">${mineConf ? 'Seen it again' : 'Still there'}</button><button class="btn line" data-act="gone" data-id="${esc(r.id)}">It's gone</button></div>`;
   }
   h += `<p class="fine">Clears 15 minutes after the last sighting, at ${clock(lastSeen(r) + ENF_TTL)}.</p>`;
-  return h;
+  return h + modRow(r);
 }
 function sheetNewReport() {
   const d = S.draft;
@@ -2302,6 +2397,7 @@ function sheetCar() {
   let h = sheetHead(esc(carPlaceText()), `Saved ${ago(c.at).toLowerCase()}, at ${clock(c.at)}`, `<span class="ic car">${I.car}</span>`);
   const fl = fullQuestionLot();
   if (fl && fl.id === c.lot) h += fullPrompt(fl);
+  if (leavePrompt()) h += `<button class="btn red full" style="margin-bottom:10px" data-act="leaveStart">I'm leaving now</button>`;
   if (S.profile.vehicle) h += `<div class="detail" style="margin-top:0"><span class="tag">${esc(S.profile.vehicle)}</span></div>`;
   if (c.acc != null) h += `<p class="row-s" style="margin:${S.profile.vehicle ? 10 : 0}px 0 12px">Pinned to your device's location, accurate to about ${Math.round(c.acc)} m. GPS can be off by more next to tall buildings or inside a garage.</p>`;
   const dc = distToCar();
@@ -2342,6 +2438,7 @@ function renderSheet() {
   else if (sh.type === 'walk') h = sheetWalk();
   else if (sh.type === 'plan') h = sheetPlan();
   else if (sh.type === 'car') h = sheetCar();
+  else if (sh.type === 'leaving') h = sheetLeaving();
   else if (sh.type === 'zone') h = sheetZone(sh.id);
   const wasHidden = el.hidden, st = el.scrollTop;
   if (wasHidden) S.sheetOpener = document.activeElement;
@@ -2427,6 +2524,25 @@ function parkPrompt() {
   const lot = lotUnderMe(); if (!lot) return null;
   const c = S.profile.car;
   return c && Date.now() - c.at < PARK_QUIET_MS ? null : lot;
+}
+/* "I'm leaving now": once you are back in the lot your saved car is in, one button frees the spot, and it will not go through
+   until you say how full the lot is. Leaving is the moment you know what the next student will find. Same rules as the iPhone app. */
+const LEAVE_QUIET_MS = 10 * 60000, LEAVE_NEAR_M = 40;   // hidden for 10 minutes after saving the car; or within 40 m of it when the lot can't be told
+const LEAVE_HINTS = { plenty:'Lots of open spots', some:'A fair number are open', few:'Only a few are open', full:'Nothing is open' };
+function leavePrompt() {
+  const c = S.profile.car, lot = c && c.lot ? LOT_BY[c.lot] : null, l = S.loc;
+  if (!lot || !l || l.stale || !(l.acc <= LOT_DETECT_M) || Date.now() - c.at < LEAVE_QUIET_MS) return null;
+  const u = lotAt(l.x, l.y);
+  if (u && u.id === lot.id) return lot;
+  return dist(l, c) * M_PER_PX <= LEAVE_NEAR_M ? lot : null;
+}
+function sheetLeaving() {
+  const c = S.profile.car, l = c && c.lot ? LOT_BY[c.lot] : null;
+  if (!l) return sheetHead('Leaving?', '') + '<p class="row-s" style="margin:0">Save where you parked first, then this button frees the spot.</p>';
+  return sheetHead(`Leaving ${esc(l.name)}?`, 'How full is it right now?', `<span class="ic car">${I.car}</span>`)
+    + `<p class="row-s" style="margin:0 0 12px">Look around before you go. Your answer tells the next student what to expect, and it frees your saved spot. Your name is never attached.</p>`
+    + `<div class="leaveopts" role="group" aria-label="How full is ${esc(l.name)}?">${Object.entries(LEVELS).map(([k, v]) => `<button data-act="leaveAnswer" data-v="${k}" style="--lc:${v.color}"${S.leaveBusy ? ' disabled' : ''} aria-label="${esc(l.name)} is ${v.label}. ${LEAVE_HINTS[k]}. Sends your answer and frees your saved spot."><i></i><span><span class="row-t" style="display:block">${v.label}</span><span class="row-s" style="display:block">${LEAVE_HINTS[k]}</span></span></button>`).join('')}</div>`
+    + `<button class="btn quiet full" style="margin-top:12px" data-act="closeSheet">Not leaving yet</button>`;
 }
 function carIsHere(l) {   // your saved car is already in this lot, and you are not standing somewhere else in it
   const c = S.profile.car;
@@ -2567,7 +2683,7 @@ function setCar(x, y, o = {}) {   // o.acc: the GPS reading's accuracy in meters
   S.profile.car = car;
   S.fullAsk = null;
   if (o.acc != null && car.lot && askFullOn()) {   // only when the spot came from your device's location, so you are actually there
-    const d = S.lots[car.lot];
+    const d = lotRec(car.lot);
     if (!(d && Date.now() - d.at < FULL_QUIET_MS)) S.fullAsk = { lot: car.lot, at: Date.now() };
   }
   S.pick = null; saveProfile();
@@ -2600,10 +2716,12 @@ async function submitReport() {
     let until;
     if (d.dur === 'day') { const e = new Date(); e.setHours(23, 59, 0, 0); until = e.getTime(); }
     else until = now + Number(d.dur) * MIN;
+    if (textIsObjectionable(d.note)) { toast(FILTER_MSG); return; }
     const ok = await addReport({ kind:'closure', x:d.x, y:d.y, place:place.id, note:d.note.trim().slice(0, 80), at:now, until, by:myKey(), confirms:{}, gone:{} });
     if (ok) { toast('Closure posted.'); closeSheet(); }
     return;
   }
+  if (textIsObjectionable(d.note) || textIsObjectionable(d.plate)) { toast(FILTER_MSG); return; }
   const ok = await addReport({ kind:'enforcement', x:d.x, y:d.y, place:place.id, vehicle:d.vehicle || '', plate:d.plate.trim().slice(0, 12), note:d.note.trim().slice(0, 120), at:now, by:myKey(), confirms:{}, gone:{} });
   if (ok) { toast('Report posted. Thanks for looking out.'); closeSheet(); }
 }
@@ -2675,6 +2793,23 @@ document.addEventListener('click', async e => {
     case 'carPick': startCarPick(); break;
     case 'carChoose': if (S.profile.car) openSheet({ type:'car' }); else { S.carMenu = !S.carMenu; renderMapUI(); } break;
     case 'carHere': saveCarHere(); break;
+    case 'flagOpen': S.modUI = S.modUI && S.modUI.id === id && S.modUI.mode === 'flag' ? null : { id, mode:'flag' }; renderSheet(); break;
+    case 'blockOpen': S.modUI = S.modUI && S.modUI.id === id && S.modUI.mode === 'block' ? null : { id, mode:'block' }; renderSheet(); break;
+    case 'modClose': S.modUI = null; renderSheet(); break;
+    case 'flagPick': await flagReport(id, v); break;
+    case 'blockDo': blockAuthor(id); break;
+    case 'unblockAll': unblockAll(); break;
+    case 'leaveStart': if (S.profile.car && S.profile.car.lot) openSheet({ type:'leaving' }); break;
+    case 'leaveAnswer': {
+      const c = S.profile.car, l = c && c.lot ? LOT_BY[c.lot] : null;
+      if (!l || S.leaveBusy || !LEVELS[v]) break;
+      S.leaveBusy = true; renderSheet();
+      const ok = await setLotLevel(l.id, v);
+      S.leaveBusy = false;
+      if (ok) { S.fullAsk = null; S.profile.car = null; saveProfile(); closeSheet(); toast(`Thanks. ${l.name} marked as ${LEVELS[v].label.toLowerCase()}. Drive safe.`); }
+      else renderSheet();
+      break;
+    }
     case 'locate': locateMe(); break;
     case 'walkToCar': walkToCar(); break;
     case 'rHere': if (locOnCampus()) { S.draft.x = S.loc.x; S.draft.y = S.loc.y; renderPins(); const el = $('#draftLoc'); if (el) el.textContent = describe(S.loc.x, S.loc.y).text; } break;

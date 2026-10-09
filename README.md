@@ -9,7 +9,7 @@ Know before you park. A campus parking app with enforcement reports, lot availab
 
 ## Running it
 
-It's hosted with GitHub Pages at https://harlanyerger.github.io/ParkRadar/. To update the app, upload a new `index.html` to this repository.
+It's hosted with GitHub Pages at https://parkradarapp.com/. To update the app, upload a new `index.html` to this repository.
 
 On an iPhone, open the link in Safari, tap Share, then Add to Home Screen. ParkRadar then opens full screen, like an app.
 
